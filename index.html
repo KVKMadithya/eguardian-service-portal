@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://github.com; connect-src 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="description" content="eGuardian Enterprise Service Request Portal with a DevSecOps CI/CD pipeline.">
@@ -18,7 +18,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Runs synchronously before first paint: sets Tailwind darkMode and applies the saved theme (no flash). -->
-  <script src="theme-init.js?v=6"></script>
+  <script src="theme-init.js?v=7"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -347,6 +347,51 @@
     .filter-bar .field { border-radius: 999px; padding-left: 0.9rem; }
     .identity-lock { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.75rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-inset); color: var(--text); }
 
+    /* ---------- Live CI status badge ---------- */
+    .ci-badge-link { display: inline-flex; align-items: center; line-height: 0; border-radius: 4px; transition: transform 150ms ease-out, box-shadow 200ms ease; }
+    .ci-badge-link:hover { transform: translateY(-1px); }
+    .ci-badge-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+    .ci-status-badge { display: block; height: 20px; width: auto; }
+
+    /* ---------- Print-to-PDF executive report ---------- */
+    .print-only { display: none; }
+    @page { size: A4 portrait; margin: 12mm; }
+    /* .print-mode is added by app.js on beforeprint so Chart.js measures the same width it will print at. */
+    .print-mode main { max-width: 186mm !important; margin-left: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+    .print-mode .chart-grid { grid-template-columns: 1fr !important; }
+    .print-mode *, .print-mode *::before, .print-mode *::after { transition: none !important; animation: none !important; }
+
+    @media print {
+      :root, .dark {
+        --bg: #ffffff; --surface: #ffffff; --surface-solid: #ffffff; --surface-inset: #f8fafc; --surface-hover: transparent;
+        --border: #cbd5e1; --border-strong: #94a3b8; --text: #0f172a; --text-2: #1e293b; --text-muted: #475569; --text-faint: #64748b;
+        --code: #047857; --danger: #b91c1c; --shadow-sm: none; --shadow-md: none; --shadow-lg: none; --glow: none; --seg-track: #e2e8f0;
+      }
+      html, body { background: #ffffff !important; color: #0f172a !important; }
+      body { background-image: none !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+      /* Hide interactive chrome and every tab except the Dashboard. */
+      header nav, #roleSwitcher, label[for="roleSwitcher"], #roleBadge, #themeToggle, #roleBanner,
+      #toastContainer, #historyModal, footer, .filter-bar button, #section-dashboard button { display: none !important; }
+      [role="tabpanel"]:not(#section-dashboard) { display: none !important; }
+      #section-dashboard, #section-dashboard[hidden] { display: block !important; animation: none !important; }
+      .print-only { display: block !important; }
+      .report-meta { font-size: 9pt; color: #475569; margin-bottom: 2mm; }
+
+      .site-header { position: static !important; background: #ffffff !important; border-bottom: 2px solid #0f172a !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+      main { max-width: 186mm !important; margin: 0 !important; padding: 4mm 0 0 !important; }
+      .card { background: #ffffff !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; break-inside: avoid; page-break-inside: avoid; }
+      .card-kpi::after { display: none !important; }
+      .card-kpi:hover, a.link-card:hover { transform: none !important; }
+      .chart-grid { grid-template-columns: 1fr !important; }
+      .chart-box { break-inside: avoid; page-break-inside: avoid; }
+      .chart-box canvas { max-width: 100% !important; }
+      .code-block { white-space: pre-wrap !important; overflow: visible !important; break-inside: avoid; }
+      .data-table tbody tr:hover { background: transparent !important; }
+      a { color: inherit !important; text-decoration: none !important; }
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+    }
+
     /* ---------- Accessibility: honour reduced-motion ---------- */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -363,9 +408,8 @@
           <h1 class="mono text-base font-semibold tracking-tight sm:text-lg" style="color: var(--text)">
             <span class="brand-mark">@EGUARDIAN</span> <span style="color: var(--text-faint)">//</span> Service Request Portal
           </h1>
-          <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions" class="ci-badge">
-            <span class="ci-dot" aria-hidden="true"></span>
-            CI/CD Pipeline: Passing
+          <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions" class="ci-badge-link" title="Live GitHub Actions status — opens the run history">
+            <img id="ciStatusBadge" class="ci-status-badge" src="https://github.com/KVKMadithya/eguardian-service-portal/actions/workflows/deploy.yml/badge.svg" alt="DevSecOps Pipeline status" width="186" height="20" decoding="async" referrerpolicy="no-referrer">
           </a>
         </div>
         <div class="flex items-center gap-2">
@@ -423,6 +467,7 @@
     <!-- ===================== AREA 1 — DASHBOARD ===================== -->
     <section id="section-dashboard" role="tabpanel" aria-label="Dashboard" class="space-y-6">
       <div>
+        <p class="print-only report-meta">eGuardian · Executive Service Request Report · data as of 30 Oct 2026 · synthetic, anonymized dataset</p>
         <h2 class="section-heading">Executive Dashboard</h2>
         <p class="section-sub">Live KPIs and charts computed from the current request dataset. Filters apply to every KPI and chart. <span id="kpiRecordCount" class="mono text-emerald-600 dark:text-emerald-400"></span></p>
       </div>
@@ -549,7 +594,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div class="chart-grid grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div class="card">
           <h3 class="card-title">Requests by Department</h3>
           <div class="chart-box"><canvas id="deptChart" aria-label="Bar chart of requests by department" role="img"></canvas></div>
@@ -1018,10 +1063,11 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
         <div class="card">
           <div class="flex items-center justify-between gap-2">
             <p class="kpi-label">Gate 1 · Secret Detection</p>
-            <span class="badge badge-under-review">AWAITING CI RUN</span>
+            <span class="badge badge-pass">PASSED</span>
           </div>
           <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">gitleaks/gitleaks-action@v2</p>
-          <p class="muted mt-2">Scans the full git history (<code>fetch-depth: 0</code>) for API keys, tokens and credentials on every push to <code>main</code>. Its first result is recorded in the <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions" class="text-emerald-700 dark:text-emerald-300 underline">Actions run history</a>.</p>
+          <p class="muted mt-2">Scans the full git history (<code>fetch-depth: 0</code>) for API keys, tokens and credentials on every push to <code>main</code>.</p>
+          <p class="mt-2 text-xs"><a href="https://github.com/KVKMadithya/eguardian-service-portal/actions/runs/41011990393" target="_blank" rel="noopener noreferrer" class="kpi-pill kpi-pill-good">CI run · Oct 30, 2026 06:05 UTC ↗</a> <span class="muted">no leaks found</span></p>
         </div>
         <div class="card">
           <div class="flex items-center justify-between gap-2">
@@ -1030,7 +1076,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
           </div>
           <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">eslint + eslint-plugin-security</p>
           <p class="muted mt-2"><code>npm run lint</code> applies <code>eslint:recommended</code> and <code>plugin:security/recommended-legacy</code> to <code>app.js</code> and <code>theme-init.js</code>.</p>
-          <p class="mt-2 text-xs"><span class="kpi-pill kpi-pill-good">Local run · Oct 30, 2026</span> <span class="muted">0 errors, 0 warnings</span></p>
+          <p class="mt-2 text-xs"><a href="https://github.com/KVKMadithya/eguardian-service-portal/actions/runs/41011990393" target="_blank" rel="noopener noreferrer" class="kpi-pill kpi-pill-good">CI run · Oct 30, 2026 06:05 UTC ↗</a> <span class="muted">0 errors, 0 warnings (also verified locally)</span></p>
         </div>
         <div class="card">
           <div class="flex items-center justify-between gap-2">
@@ -1039,10 +1085,10 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
           </div>
           <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">npm audit --audit-level=critical</p>
           <p class="muted mt-2">Fails the build on any critical CVE in the dependency tree.</p>
-          <p class="mt-2 text-xs"><span class="kpi-pill kpi-pill-good">Local run · Oct 30, 2026</span> <span class="muted">found 0 vulnerabilities</span></p>
+          <p class="mt-2 text-xs"><a href="https://github.com/KVKMadithya/eguardian-service-portal/actions/runs/41011990393" target="_blank" rel="noopener noreferrer" class="kpi-pill kpi-pill-good">CI run · Oct 30, 2026 06:05 UTC ↗</a> <span class="muted">found 0 vulnerabilities (also verified locally)</span></p>
         </div>
       </div>
-      <p class="muted">Gates 2 and 3 above were run locally on Oct 30, 2026. The authoritative, timestamped results for all three gates are in the GitHub Actions history for each push.</p>
+      <p class="muted">Results above are from <a href="https://github.com/KVKMadithya/eguardian-service-portal/actions/runs/41011990393" target="_blank" rel="noopener noreferrer" class="underline">GitHub Actions run #41011990393</a> (commit <code>f8d9d5c</code>), the latest run at the time of writing: all three gates passed and the deploy job ran. The live badge in the header always reflects the most recent run.</p>
 
       <div class="card">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -1124,7 +1170,7 @@ jobs:
           <table class="data-table">
             <thead><tr><th scope="col">Control</th><th scope="col">Implementation</th><th scope="col">Threat Mitigated</th></tr></thead>
             <tbody>
-              <tr><td class="font-semibold">Content Security Policy</td><td><code>&lt;meta http-equiv="Content-Security-Policy"&gt;</code> limits scripts to self, Tailwind and jsDelivr; styles to self and Google Fonts; <code>connect-src 'self'</code></td><td>Loading or exfiltrating to untrusted origins; injected third-party scripts</td></tr>
+              <tr><td class="font-semibold">Content Security Policy</td><td><code>&lt;meta http-equiv="Content-Security-Policy"&gt;</code> limits scripts to self, Tailwind and jsDelivr; styles to self and Google Fonts; images to self, <code>data:</code> and <code>github.com</code> (live CI badge only); <code>connect-src 'self'</code></td><td>Loading or exfiltrating to untrusted origins; injected third-party scripts</td></tr>
               <tr><td class="font-semibold">X-Content-Type-Options</td><td><code>nosniff</code></td><td>MIME-type sniffing of uploaded or served content</td></tr>
               <tr><td class="font-semibold">Referrer-Policy</td><td><code>strict-origin-when-cross-origin</code></td><td>Leaking full page URLs to third-party sites</td></tr>
               <tr><td class="font-semibold">DOM XSS sanitization</td><td><code>escapeHTML()</code> encodes <code>&amp; &lt; &gt; " ' `</code> on every dynamic value before it reaches <code>innerHTML</code>; toasts use <code>textContent</code></td><td>Stored XSS via request titles, descriptions or notes</td></tr>
@@ -1237,8 +1283,8 @@ downloadFile(name, "\uFEFF" + csv,
 &lt;script src="theme-init.js"&gt;&lt;/script&gt;
 &lt;script src="app.js" defer&gt;&lt;/script&gt;</pre>
 <pre class="code-block code-after">&lt;!-- AFTER — bump ?v= on every release --&gt;
-&lt;script src="theme-init.js?v=6"&gt;&lt;/script&gt;
-&lt;script src="app.js?v=6" defer&gt;&lt;/script&gt;</pre>
+&lt;script src="theme-init.js?v=7"&gt;&lt;/script&gt;
+&lt;script src="app.js?v=7" defer&gt;&lt;/script&gt;</pre>
           </div>
         </article>
       </div>
@@ -1335,6 +1381,6 @@ git push origin main</pre>
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <!-- Bump ?v= on every release so browsers and GitHub Pages' 10-minute cache never serve a stale app.js. -->
-  <script src="app.js?v=6" defer></script>
+  <script src="app.js?v=7" defer></script>
 </body>
 </html>

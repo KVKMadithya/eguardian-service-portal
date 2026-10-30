@@ -941,6 +941,64 @@ function toggleTheme() {
 }
 
 /* --------------------------------------------------------------------------
+   Live CI badge fallback & print-to-PDF report (presentation only)
+   -------------------------------------------------------------------------- */
+
+// If GitHub is unreachable (offline, blocked), swap the broken image for a plain text link.
+function setupStatusBadge() {
+  const badge = byId("ciStatusBadge");
+  if (!badge) return;
+  const fallback = () => {
+    const text = document.createElement("span");
+    text.className = "ci-badge";
+    text.textContent = "Pipeline status · view on GitHub";
+    badge.replaceWith(text);
+  };
+  if (badge.complete && badge.naturalWidth === 0) fallback();
+  else badge.addEventListener("error", fallback, { once: true });
+}
+
+const printState = { active: false, dark: false, hiddenPanels: [], animation: null };
+
+// Chart.js bakes colours and size into the canvas, so before printing we switch to light colours,
+// lay the page out at A4 width, show the Dashboard, and redraw the charts without animation.
+function preparePrint() {
+  if (printState.active) return;
+  printState.active = true;
+  const root = document.documentElement;
+  printState.dark = root.classList.contains("dark");
+  printState.hiddenPanels = TABS.filter((name) => {
+    const panel = byId(`section-${name}`);
+    return panel ? panel.hidden : false;
+  });
+  root.classList.add("print-mode");
+  root.classList.remove("dark");
+  const dashboard = byId("section-dashboard");
+  if (dashboard) dashboard.hidden = false;
+  if (typeof Chart !== "undefined") {
+    printState.animation = Chart.defaults.animation;
+    Chart.defaults.animation = false;
+  }
+  applyChartTheme();
+  renderDashboard();
+}
+
+function restoreAfterPrint() {
+  if (!printState.active) return;
+  printState.active = false;
+  const root = document.documentElement;
+  root.classList.toggle("dark", printState.dark);
+  root.classList.remove("print-mode");
+  TABS.forEach((name) => {
+    const panel = byId(`section-${name}`);
+    if (panel) panel.hidden = printState.hiddenPanels.includes(name);
+  });
+  if (typeof Chart !== "undefined" && printState.animation !== null) Chart.defaults.animation = printState.animation;
+  applyChartTheme();
+  renderDashboard();
+}
+
+/* --------------------------------------------------------------------------
    Role switcher
    -------------------------------------------------------------------------- */
 
@@ -2085,6 +2143,10 @@ function init() {
       if (event.target === modal) closeModal();
     });
   }
+
+  setupStatusBadge();
+  window.addEventListener("beforeprint", preparePrint);
+  window.addEventListener("afterprint", restoreAfterPrint);
 
   window.addEventListener("hashchange", () => {
     const tab = tabFromHash();
