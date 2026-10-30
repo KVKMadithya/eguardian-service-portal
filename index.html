@@ -17,7 +17,7 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Runs synchronously before first paint: sets Tailwind darkMode and applies the saved theme (no flash). -->
-  <script src="theme-init.js"></script>
+  <script src="theme-init.js?v=5"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -30,7 +30,7 @@
       --surface-solid: #ffffff;
       --surface-inset: #f8fafc;
       --surface-hover: rgba(241, 245, 249, 0.9);
-      --header-bg: rgba(245, 247, 251, 0.78);
+      --header-bg: rgba(245, 247, 251, 0.9);
       --border: #e2e8f0;
       --border-strong: #cbd5e1;
       --text: #0f172a;
@@ -65,7 +65,7 @@
       --surface-solid: #0f172a;
       --surface-inset: rgba(2, 6, 23, 0.7);
       --surface-hover: rgba(30, 41, 59, 0.55);
-      --header-bg: rgba(2, 6, 23, 0.72);
+      --header-bg: rgba(2, 6, 23, 0.86);
       --border: #1e293b;
       --border-strong: #334155;
       --text: #f1f5f9;
@@ -243,7 +243,8 @@
     .data-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
     .data-table tbody tr { transition: background-color 150ms ease; }
     .data-table tbody tr:hover { background: var(--surface-hover); }
-    .data-table code { color: var(--code); font-size: 0.78rem; }
+    .data-table code { color: var(--code); font-size: 0.78rem; white-space: nowrap; }
+    .data-table .nowrap { white-space: nowrap; }
     .row-overdue td:first-child { box-shadow: inset 3px 0 0 #ef4444; }
     .actions-cell { white-space: nowrap; }
     .actions-cell .btn { margin: 0 0.15rem 0.2rem 0; }
@@ -289,6 +290,22 @@
 
     .gwt dt { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-top: 0.45rem; }
     .gwt dd { font-size: 0.85rem; color: var(--text-2); margin: 0; }
+
+    /* ---------- Role banner & role panels ---------- */
+    .role-icon { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 2.6rem; height: 2.6rem; border-radius: 0.8rem; font-weight: 700; font-size: 1.05rem; color: #ffffff; background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 8px 20px -8px rgba(16, 185, 129, 0.6); }
+    .role-banner-manager .role-icon { background: linear-gradient(135deg, #3b82f6, #4f46e5); box-shadow: 0 8px 20px -8px rgba(59, 130, 246, 0.6); }
+    .role-banner-leadership .role-icon { background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 8px 20px -8px rgba(168, 85, 247, 0.6); }
+    .role-banner-staff::before { background: linear-gradient(135deg, rgba(16, 185, 129, 0.55), rgba(99, 102, 241, 0.2)); }
+    .role-banner-manager::before { background: linear-gradient(135deg, rgba(59, 130, 246, 0.55), rgba(99, 102, 241, 0.25)); }
+    .role-banner-leadership::before { background: linear-gradient(135deg, rgba(168, 85, 247, 0.55), rgba(99, 102, 241, 0.25)); }
+    .role-banner-enter { animation: panel-in 350ms ease-out both; }
+    .perm-chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.75rem; font-weight: 500; border: 1px solid var(--border); background: var(--surface-inset); color: var(--text-2); }
+    .perm-yes::before { content: "✓"; color: #10b981; font-weight: 700; }
+    .perm-no { color: var(--text-faint); }
+    .perm-no::before { content: "✕"; color: #ef4444; font-weight: 700; }
+    .mini-stat { background: var(--surface-inset); border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.7rem 0.9rem; }
+    .mini-stat-value { margin-top: 0.15rem; font-size: 1.5rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    .text-breach { color: var(--danger); font-weight: 600; }
 
     /* ---------- Accessibility: honour reduced-motion ---------- */
     @media (prefers-reduced-motion: reduce) {
@@ -337,6 +354,26 @@
   </header>
 
   <main class="mx-auto max-w-7xl px-4 py-6">
+
+    <!-- ===================== ROLE CONTEXT BANNER ===================== -->
+    <div id="roleBanner" class="card role-banner role-banner-staff mb-6" aria-live="polite">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="flex items-start gap-3">
+          <span id="roleBannerIcon" class="role-icon" aria-hidden="true">S</span>
+          <div>
+            <p class="kpi-label">Current view</p>
+            <h2 id="roleBannerTitle" class="text-base font-semibold sm:text-lg" style="color: var(--text)">Staff View</h2>
+            <p id="roleBannerText" class="muted"></p>
+          </div>
+        </div>
+        <div data-roles="Staff">
+          <label for="staffIdentity" class="field-label">Acting as (demo identity)</label>
+          <select id="staffIdentity" class="field mono w-44" aria-describedby="staffIdentityHint"></select>
+          <p id="staffIdentityHint" class="muted mt-1 text-xs">Anonymized employee ID — no real personal data.</p>
+        </div>
+      </div>
+      <ul id="roleBannerPerms" class="mt-3 flex flex-wrap gap-2" aria-label="Permissions for this view"></ul>
+    </div>
 
     <!-- ===================== AREA 1 — DASHBOARD ===================== -->
     <section id="section-dashboard" role="tabpanel" aria-label="Dashboard" class="space-y-6">
@@ -396,13 +433,81 @@
         </div>
       </div>
 
+      <!-- Role panel: Staff — personal requests -->
+      <div id="staffPanel" class="card" data-roles="Staff">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 class="card-title mb-0">My Requests</h3>
+            <p id="staffPanelSub" class="muted"></p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" data-action="goto-tab" data-goto="workflow">Submit a request</button>
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-3">
+          <div class="mini-stat"><p class="kpi-label">My Open</p><p id="myOpen" class="mini-stat-value">0</p></div>
+          <div class="mini-stat"><p class="kpi-label">My Overdue</p><p id="myOverdue" class="mini-stat-value text-red-600 dark:text-red-300">0</p></div>
+          <div class="mini-stat"><p class="kpi-label">Closed</p><p id="myClosed" class="mini-stat-value">0</p></div>
+        </div>
+        <div class="mt-4 overflow-x-auto">
+          <table class="data-table">
+            <thead><tr><th scope="col">ID</th><th scope="col">Title</th><th scope="col">Status</th><th scope="col">Last Update</th><th scope="col">Actions</th></tr></thead>
+            <tbody id="staffPanelBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Role panel: Manager — action queue -->
+      <div id="managerPanel" class="card" data-roles="Manager">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 class="card-title mb-0">Action Queue</h3>
+            <p id="managerPanelSub" class="muted"></p>
+          </div>
+          <button type="button" class="btn btn-sm" data-action="goto-tab" data-goto="workflow">Open full queue</button>
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-3">
+          <div class="mini-stat"><p class="kpi-label">Awaiting Review</p><p id="mgrSubmitted" class="mini-stat-value">0</p></div>
+          <div class="mini-stat"><p class="kpi-label">Awaiting Decision</p><p id="mgrReview" class="mini-stat-value">0</p></div>
+          <div class="mini-stat"><p class="kpi-label">Awaiting Completion</p><p id="mgrApproved" class="mini-stat-value">0</p></div>
+        </div>
+        <div class="mt-4 overflow-x-auto">
+          <table class="data-table">
+            <thead><tr><th scope="col">ID</th><th scope="col">Title</th><th scope="col">Dept</th><th scope="col">Status</th><th scope="col">Age</th><th scope="col">Actions</th></tr></thead>
+            <tbody id="managerPanelBody"></tbody>
+          </table>
+        </div>
+        <p id="managerPanelMore" class="muted mt-2"></p>
+      </div>
+
+      <!-- Role panel: Leadership — SLA breaches -->
+      <div id="leadershipPanel" class="card card-danger" data-roles="Leadership">
+        <h3 class="card-title mb-0">SLA Breaches</h3>
+        <p id="leadershipSummary" class="muted"></p>
+        <div class="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <div class="overflow-x-auto lg:col-span-2">
+            <p class="kpi-label mb-2">By department</p>
+            <table class="data-table">
+              <thead><tr><th scope="col">Dept</th><th scope="col">Open</th><th scope="col">Overdue</th><th scope="col">Breach</th><th scope="col">Oldest</th></tr></thead>
+              <tbody id="leadershipDeptBody"></tbody>
+            </table>
+          </div>
+          <div class="overflow-x-auto lg:col-span-3">
+            <p class="kpi-label mb-2">Longest-running breaches</p>
+            <table class="data-table">
+              <thead><tr><th scope="col">ID</th><th scope="col">Title</th><th scope="col">Dept</th><th scope="col">Status</th><th scope="col">Open</th></tr></thead>
+              <tbody id="leadershipOverdueBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div class="card">
           <h3 class="card-title">Requests by Department</h3>
           <div class="chart-box"><canvas id="deptChart" aria-label="Bar chart of requests by department" role="img"></canvas></div>
         </div>
         <div class="card">
-          <h3 class="card-title">Request Volume Over Time</h3>
+          <h3 class="card-title mb-0">Request Volume Over Time</h3>
+          <p class="muted mb-3 text-xs">Requests created per week (week starting Monday)</p>
           <div class="chart-box"><canvas id="trendChart" aria-label="Line chart of weekly request volume" role="img"></canvas></div>
         </div>
         <div class="card">
@@ -498,8 +603,13 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
       <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div class="card xl:col-span-1">
           <h3 class="card-title">Submit New Request</h3>
-          <p id="formRoleNotice" class="mb-3 text-sm text-amber-700 dark:text-amber-300"></p>
-          <form id="requestForm" novalidate class="space-y-2">
+          <div data-roles="Leadership" class="inset-surface rounded-lg border border-slate-200 dark:border-slate-800 p-4">
+            <p class="font-semibold" style="color: var(--text)">Read-only view</p>
+            <p class="muted mt-1">Leadership has oversight access only. Requests are submitted by Staff and decided by Managers — switch role in the header to act on the queue.</p>
+            <button type="button" class="btn btn-sm mt-3" data-action="goto-tab" data-goto="dashboard">View SLA breaches</button>
+          </div>
+          <p id="formIdentityNote" class="muted mb-3" data-roles="Staff,Manager"></p>
+          <form id="requestForm" novalidate class="space-y-2" data-roles="Staff,Manager">
             <div>
               <label for="title" class="field-label">Title</label>
               <input id="title" name="title" type="text" class="field" maxlength="100" autocomplete="off" placeholder="e.g. VPN access for audit team" aria-describedby="err-title">
@@ -547,7 +657,14 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
               <button type="button" class="btn btn-danger" data-action="reset-demo">Reset Demo Data</button>
             </div>
           </div>
-          <div class="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter queue by status">
+          <div class="mb-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Queue scope">
+            <span class="field-label mb-0 mr-1">View</span>
+            <button type="button" class="pill" data-action="queue-scope" data-scope="mine" data-roles="Staff">My requests</button>
+            <button type="button" class="pill" data-action="queue-scope" data-scope="action" data-roles="Manager">Needs action</button>
+            <button type="button" class="pill" data-action="queue-scope" data-scope="all">All requests</button>
+          </div>
+          <div class="mb-3 flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter queue by status">
+            <span class="field-label mb-0 mr-1">Status</span>
             <button type="button" class="pill active" data-action="queue-status" data-status="">All</button>
             <button type="button" class="pill" data-action="queue-status" data-status="Submitted">Submitted</button>
             <button type="button" class="pill" data-action="queue-status" data-status="Under Review">Under Review</button>
@@ -572,7 +689,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
               <tbody id="workflowTableBody"></tbody>
             </table>
           </div>
-          <p class="muted mt-3">Rows with a red edge are open past the 7-day SLA. Transition buttons appear only in Manager View.</p>
+          <p class="muted mt-3">Rows with a red edge are open past the 7-day SLA. Transition buttons appear only in Manager View; Leadership is read-only.</p>
         </div>
       </div>
     </section>
@@ -746,6 +863,15 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
               <dt>Then</dt><dd>the history is shown in chronological order with actor and note, and the file downloads with quotes escaped and spreadsheet formulas neutralised</dd>
             </dl>
           </article>
+          <article class="card lg:col-span-2">
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100"><code class="text-emerald-700 dark:text-emerald-300">US-08</code> Role-specific views</h4>
+            <p class="muted mt-1">As any user, I want the portal to show what matters for my role so that I am not wading through actions I cannot take.</p>
+            <dl class="gwt mt-2">
+              <dt>Given</dt><dd>I switch the Role selector to Staff, Manager or Leadership</dd>
+              <dt>When</dt><dd>the view changes</dd>
+              <dt>Then</dt><dd>Staff land on Workflow showing <em>My requests</em> with their Employee ID pre-filled; Managers land on Workflow showing <em>Needs action</em> (oldest first) with an Action Queue on the dashboard; Leadership land on a read-only Dashboard with an SLA-breach breakdown and cannot submit or change requests</dd>
+            </dl>
+          </article>
         </div>
       </div>
 
@@ -775,6 +901,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             <li><strong class="text-slate-900 dark:text-slate-100">Strict state machine:</strong> statuses change only through <code>VALID_TRANSITIONS</code>; there is no admin override.</li>
             <li><strong class="text-slate-900 dark:text-slate-100">Fail-closed CI/CD:</strong> if secret scanning, linting or the dependency audit fails, the deploy job does not run.</li>
             <li>Role switching is a demo convenience, not authentication; production would map roles from SSO.</li>
+            <li>The Staff "Acting as" selector stands in for a signed-in employee; it only lists anonymized <code>EMP-xxx</code> IDs.</li>
           </ul>
         </div>
 
@@ -1074,17 +1201,17 @@ function createChart(key, config) {
             <div>
               <p class="font-semibold text-slate-900 dark:text-slate-100">Staff — submit a request</p>
               <ol class="mt-1 list-decimal space-y-1 pl-5">
-                <li>Choose <em>Staff View</em> in the Role selector.</li>
-                <li>Open <em>Workflow</em> and complete <em>Submit New Request</em>, using your <code>EMP-xxx</code> ID.</li>
+                <li>Choose <em>Staff View</em> in the Role selector and pick your ID under <em>Acting as</em>; the portal opens <em>Workflow</em> showing <em>My requests</em>.</li>
+                <li>Complete <em>Submit New Request</em> — your Employee ID is filled in for you.</li>
                 <li>Fix any red inline messages and submit; your request appears at the top of the queue as <em>Submitted</em>.</li>
-                <li>Click <em>History</em> at any time to see its progress.</li>
+                <li>Track progress in <em>My Requests</em> on the Dashboard, or click <em>History</em> for the full audit trail.</li>
               </ol>
             </div>
             <div>
               <p class="font-semibold text-slate-900 dark:text-slate-100">Managers — review and approve</p>
               <ol class="mt-1 list-decimal space-y-1 pl-5">
-                <li>Choose <em>Manager View</em>; transition buttons appear in the queue.</li>
-                <li>Use the status pills or search to find requests, then click <em>Move to Review</em>.</li>
+                <li>Choose <em>Manager View</em>; the queue switches to <em>Needs action</em>, oldest first, with transition buttons on each row.</li>
+                <li>Start with overdue (red-edged) rows and click <em>Move to Review</em>; the Dashboard's <em>Action Queue</em> offers the same buttons.</li>
                 <li>For a decision, open <em>History</em>, add a manager note, and click <em>Approve</em> or <em>Reject</em>.</li>
                 <li>Once delivered, click <em>Mark Completed</em> on approved requests.</li>
               </ol>
@@ -1092,9 +1219,9 @@ function createChart(key, config) {
             <div>
               <p class="font-semibold text-slate-900 dark:text-slate-100">Leadership — filter KPIs</p>
               <ol class="mt-1 list-decimal space-y-1 pl-5">
-                <li>Choose <em>Leadership View</em> (read-only) and open <em>Dashboard</em>.</li>
-                <li>Filter by department, status, priority or date range; all KPIs and charts update instantly.</li>
-                <li>Watch <em>Overdue Requests</em> for SLA breaches; use <em>Reset Filters</em> to return to the full view.</li>
+                <li>Choose <em>Leadership View</em> (read-only); the portal opens the <em>Dashboard</em>.</li>
+                <li>Filter by department, status, priority or date range; all KPIs, charts and the SLA panel update instantly.</li>
+                <li>Use <em>SLA Breaches</em> to see which departments are behind and the longest-running requests; <em>Reset Filters</em> returns to the full view.</li>
               </ol>
             </div>
           </div>
@@ -1115,7 +1242,8 @@ npm install</pre>
             <ul class="list-disc space-y-1 pl-5">
               <li>Edit records in <code>INITIAL_REQUESTS</code> in <code>app.js</code>, then click <em>Reset Demo Data</em> (or bump <code>STORAGE_KEY</code>) to reload them.</li>
               <li>KPI logic lives in <code>computeKPIs()</code>; charts in <code>renderCharts()</code>; the SLA in <code>PORTAL_CONFIG.slaThresholdDays</code>.</li>
-              <li>Lifecycle rules live in <code>VALID_TRANSITIONS</code>; role rights in <code>ROLE_PERMISSIONS</code>.</li>
+              <li>Lifecycle rules live in <code>VALID_TRANSITIONS</code>; role rights in <code>ROLE_PERMISSIONS</code>; per-role views (home tab, default queue, banner text) in <code>ROLE_PROFILES</code>.</li>
+              <li>After changing <code>app.js</code> or <code>theme-init.js</code>, bump the <code>?v=</code> number on their <code>&lt;script&gt;</code> tags in <code>index.html</code> so browsers don't serve a cached copy.</li>
               <li>Light/dark colours are CSS variables (<code>:root</code> and <code>.dark</code>) in the <code>&lt;style&gt;</code> block; <code>theme-init.js</code> applies the saved theme before first paint, and <code>applyChartTheme()</code> re-reads them for Chart.js.</li>
             </ul>
             <p class="font-semibold text-slate-900 dark:text-slate-100">4. Run the security gates locally</p>
@@ -1157,6 +1285,7 @@ git push origin main</pre>
 
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
-  <script src="app.js" defer></script>
+  <!-- Bump ?v= on every release so browsers and GitHub Pages' 10-minute cache never serve a stale app.js. -->
+  <script src="app.js?v=5" defer></script>
 </body>
 </html>

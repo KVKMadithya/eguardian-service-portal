@@ -52,6 +52,37 @@ const ROLE_PERMISSIONS = Object.freeze({
   Leadership: Object.freeze({ canSubmit: false, canTransition: false }),
 });
 
+// What each role sees: home tab on switch, default queue scope, banner copy.
+const ROLE_PROFILES = Object.freeze({
+  Staff: Object.freeze({
+    home: "workflow",
+    scope: "mine",
+    summary: "Submit service requests and track your own requests through approval.",
+    toast: "showing your requests.",
+    can: Object.freeze(["Submit new requests", "Track your requests & history", "View dashboard figures"]),
+    cannot: Object.freeze(["Change request status"]),
+  }),
+  Manager: Object.freeze({
+    home: "workflow",
+    scope: "action",
+    summary: "Review, approve or reject requests and confirm completion — every decision is audit-logged.",
+    toast: "showing requests that need action.",
+    can: Object.freeze(["Move requests through the approval path", "Add decision notes", "Submit on behalf of staff"]),
+    cannot: Object.freeze([]),
+  }),
+  Leadership: Object.freeze({
+    home: "dashboard",
+    scope: "all",
+    summary: "Read-only oversight of workload, approval speed and SLA breaches across departments.",
+    toast: "read-only dashboard with SLA breaches.",
+    can: Object.freeze(["Filter KPIs & charts", "Review SLA breaches by department", "Export data"]),
+    cannot: Object.freeze(["Submit requests", "Change request status"]),
+  }),
+});
+const QUEUE_SCOPES = Object.freeze(["mine", "action", "all"]);
+const DEFAULT_STAFF_IDENTITY = "EMP-130";
+const MONTH_ABBR = Object.freeze(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]);
+
 const STATUS_COLORS = Object.freeze({
   Submitted: "#64748b",
   "Under Review": "#f59e0b",
@@ -733,6 +764,11 @@ function weekStart(isoDate) {
   return date.toISOString().slice(0, 10);
 }
 
+function formatWeekLabel(isoDate) {
+  const [, m, d] = isoDate.split("-").map(Number);
+  return `${d} ${MONTH_ABBR[m - 1]}`;
+}
+
 function isOpen(request) {
   return OPEN_STATUSES.includes(request.status);
 }
@@ -759,6 +795,8 @@ const state = {
   role: "Staff",
   activeTab: "dashboard",
   selectedRequestId: null,
+  staffIdentity: DEFAULT_STAFF_IDENTITY,
+  queueScope: "mine",
   queueSearch: "",
   queueStatus: "",
   charts: { deptChart: null, trendChart: null, statusChart: null },
@@ -909,16 +947,61 @@ function permissions() {
 }
 
 function setRole(role) {
-  if (!ROLES.includes(role)) return;
+  if (!ROLES.includes(role) || role === state.role) return;
+  const profile = ROLE_PROFILES[role];
   state.role = role;
+  state.queueScope = profile.scope;
+  state.queueStatus = "";
   applyRoleUI();
-  renderWorkflowTable();
+  renderAll();
   if (state.selectedRequestId) renderModal();
-  showToast(`Switched role to ${role}.`, "info");
+  switchTab(profile.home);
+  const banner = byId("roleBanner");
+  if (banner) {
+    banner.classList.remove("role-banner-enter");
+    void banner.offsetWidth; // restart the entrance animation
+    banner.classList.add("role-banner-enter");
+  }
+  showToast(`${role} View — ${profile.toast}`, "info");
+}
+
+function setStaffIdentity(id) {
+  const value = String(id || "").toUpperCase();
+  if (!EMPLOYEE_ID_PATTERN.test(value)) return;
+  state.staffIdentity = value;
+  applyRoleUI();
+  renderAll();
+}
+
+function requesterIds() {
+  const ids = new Set(state.requests.map((r) => r.requesterId));
+  ids.add(state.staffIdentity);
+  return Array.from(ids).sort();
+}
+
+function renderRoleBanner(profile) {
+  const banner = byId("roleBanner");
+  if (banner) banner.className = `card role-banner role-banner-${state.role.toLowerCase()}`;
+  const icon = byId("roleBannerIcon");
+  if (icon) icon.textContent = state.role.charAt(0);
+  const title = byId("roleBannerTitle");
+  if (title) {
+    title.textContent = state.role === "Staff" ? `Staff View · acting as ${state.staffIdentity}` : `${state.role} View`;
+  }
+  const text = byId("roleBannerText");
+  if (text) text.textContent = profile.summary;
+  const perms = byId("roleBannerPerms");
+  if (perms) {
+    perms.innerHTML = [
+      ...profile.can.map((p) => `<li class="perm-chip perm-yes">${escapeHTML(p)}</li>`),
+      ...profile.cannot.map((p) => `<li class="perm-chip perm-no">${escapeHTML(p)}</li>`),
+    ].join("");
+  }
 }
 
 function applyRoleUI() {
   const perms = permissions();
+  const profile = ROLE_PROFILES[state.role];
   const badge = byId("roleBadge");
   if (badge) {
     badge.textContent = state.role;
@@ -927,21 +1010,40 @@ function applyRoleUI() {
   const switcher = byId("roleSwitcher");
   if (switcher && switcher.value !== state.role) switcher.value = state.role;
 
+  // Generic visibility: any element with data-roles="Staff,Manager" shows only for those roles.
+  document.querySelectorAll("[data-roles]").forEach((el) => {
+    const roles = String(el.getAttribute("data-roles")).split(",").map((r) => r.trim());
+    el.hidden = !roles.includes(state.role);
+  });
+  document.querySelectorAll("[data-requires-transition]").forEach((el) => {
+    el.hidden = !perms.canTransition;
+  });
+
+  populateSelect("staffIdentity", requesterIds());
+  const identity = byId("staffIdentity");
+  if (identity) identity.value = state.staffIdentity;
+
   const form = byId("requestForm");
   if (form) {
     Array.from(form.elements).forEach((el) => {
       el.disabled = !perms.canSubmit;
     });
+    const requester = form.elements.namedItem("requesterId");
+    if (requester) {
+      const isStaff = state.role === "Staff";
+      requester.readOnly = isStaff;
+      if (isStaff) requester.value = state.staffIdentity;
+    }
   }
-  const formNotice = byId("formRoleNotice");
-  if (formNotice) {
-    formNotice.textContent = perms.canSubmit
-      ? ""
-      : "Leadership view is read-only. Switch to Staff or Manager to submit requests.";
+  const identityNote = byId("formIdentityNote");
+  if (identityNote) {
+    identityNote.textContent =
+      state.role === "Staff"
+        ? `Submitting as ${state.staffIdentity}. Change identity in the banner above.`
+        : "Submitting on behalf of an employee — enter their EMP ID.";
   }
-  document.querySelectorAll("[data-requires-transition]").forEach((el) => {
-    el.hidden = !perms.canTransition;
-  });
+
+  renderRoleBanner(profile);
 }
 
 /* --------------------------------------------------------------------------
@@ -1080,6 +1182,7 @@ function handleSubmit(event) {
   state.requests.unshift(request);
   saveRequests();
   form.reset();
+  applyRoleUI(); // re-fill the locked Staff Employee ID and refresh the identity list
   renderAll();
   showToast(`${request.id} submitted successfully.`, "success");
 }
@@ -1203,7 +1306,7 @@ function renderCharts(requests) {
   createChart("trendChart", {
     type: "line",
     data: {
-      labels: weeks.map((w) => `Wk of ${w}`),
+      labels: weeks.map(formatWeekLabel),
       datasets: [
         {
           label: "Requests created",
@@ -1216,6 +1319,7 @@ function renderCharts(requests) {
           pointHoverRadius: 5,
           fill: true,
           tension: 0.35,
+          cubicInterpolationMode: "monotone", // smooth curve that never dips below/above real values
         },
       ],
     },
@@ -1253,7 +1357,140 @@ function renderCharts(requests) {
 function renderDashboard() {
   const filtered = applyFilters(state.requests, readFilters());
   renderKPIs(filtered);
+  renderRolePanel(filtered);
   renderCharts(filtered);
+}
+
+/* --------------------------------------------------------------------------
+   Role-specific dashboard panels
+   -------------------------------------------------------------------------- */
+
+function setText(id, value) {
+  const el = byId(id);
+  if (el) el.textContent = String(value);
+}
+
+function ageDays(request) {
+  return daysBetween(request.createdAt, TODAY);
+}
+
+function lastUpdated(request) {
+  const last = request.statusHistory[request.statusHistory.length - 1];
+  return last ? String(last.timestamp).slice(0, 10) : request.createdAt;
+}
+
+function oldestFirst(a, b) {
+  return a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
+}
+
+function overdueBadge(request) {
+  return isOverdue(request) ? ' <span class="badge badge-overdue">Overdue</span>' : "";
+}
+
+function historyButton(id) {
+  return `<button type="button" class="btn btn-sm btn-ghost" data-action="open-history" data-id="${escapeHTML(id)}">History</button>`;
+}
+
+function renderStaffPanel() {
+  const mine = state.requests.filter((r) => r.requesterId === state.staffIdentity);
+  setText("staffPanelSub", `Requests raised by ${state.staffIdentity} · personal view, not affected by filters`);
+  setText("myOpen", mine.filter(isOpen).length);
+  setText("myOverdue", mine.filter(isOverdue).length);
+  setText("myClosed", mine.filter((r) => r.status === "Completed" || r.status === "Rejected").length);
+  const tbody = byId("staffPanelBody");
+  if (!tbody) return;
+  if (mine.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">No requests yet for ${escapeHTML(state.staffIdentity)}. Use “Submit a request”.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = mine
+    .map(
+      (r) => `<tr class="${isOverdue(r) ? "row-overdue" : ""}">
+        <td><code>${escapeHTML(r.id)}</code></td>
+        <td>${escapeHTML(r.title)}</td>
+        <td>${statusBadge(r.status)}${overdueBadge(r)}</td>
+        <td class="mono">${escapeHTML(lastUpdated(r))}</td>
+        <td class="actions-cell">${historyButton(r.id)}</td>
+      </tr>`
+    )
+    .join("");
+}
+
+function renderManagerPanel(requests) {
+  const open = requests.filter(isOpen).sort(oldestFirst);
+  setText("mgrSubmitted", open.filter((r) => r.status === "Submitted").length);
+  setText("mgrReview", open.filter((r) => r.status === "Under Review").length);
+  setText("mgrApproved", open.filter((r) => r.status === "Approved").length);
+  setText("managerPanelSub", `${open.length} open · ${open.filter(isOverdue).length} past SLA · oldest first`);
+  const shown = open.slice(0, 8);
+  setText("managerPanelMore", open.length > shown.length ? `+${open.length - shown.length} more in Workflow` : "");
+  const tbody = byId("managerPanelBody");
+  if (!tbody) return;
+  if (shown.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nothing waiting — the queue is clear.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = shown
+    .map(
+      (r) => `<tr class="${isOverdue(r) ? "row-overdue" : ""}">
+        <td><code>${escapeHTML(r.id)}</code></td>
+        <td>${escapeHTML(r.title)}</td>
+        <td>${escapeHTML(r.department)}</td>
+        <td>${statusBadge(r.status)}${overdueBadge(r)}</td>
+        <td class="mono">${escapeHTML(ageDays(r))}d</td>
+        <td class="actions-cell">${VALID_TRANSITIONS[r.status].map((s) => transitionButton(r.id, s, "btn-sm")).join(" ")} ${historyButton(r.id)}</td>
+      </tr>`
+    )
+    .join("");
+}
+
+function renderLeadershipPanel(requests) {
+  const open = requests.filter(isOpen);
+  const overdue = open.filter(isOverdue).sort(oldestFirst);
+  setText(
+    "leadershipSummary",
+    `${overdue.length} of ${open.length} open requests breach the ${PORTAL_CONFIG.slaThresholdDays}-day SLA`
+  );
+  const deptBody = byId("leadershipDeptBody");
+  if (deptBody) {
+    deptBody.innerHTML = DEPARTMENTS.map((dept) => {
+      const deptOpen = open.filter((r) => r.department === dept);
+      const deptOverdue = deptOpen.filter(isOverdue).length;
+      const rate = deptOpen.length > 0 ? (deptOverdue / deptOpen.length) * 100 : 0;
+      const oldest = deptOpen.length > 0 ? Math.max(...deptOpen.map(ageDays)) : null;
+      return `<tr>
+        <td class="font-semibold">${escapeHTML(dept)}</td>
+        <td>${escapeHTML(deptOpen.length)}</td>
+        <td class="${deptOverdue > 0 ? "text-breach" : ""}">${escapeHTML(deptOverdue)}</td>
+        <td class="${rate >= 50 ? "text-breach" : ""}">${escapeHTML(rate.toFixed(0))}%</td>
+        <td class="mono">${oldest === null ? "—" : `${escapeHTML(oldest)}d`}</td>
+      </tr>`;
+    }).join("");
+  }
+  const overdueBody = byId("leadershipOverdueBody");
+  if (!overdueBody) return;
+  if (overdue.length === 0) {
+    overdueBody.innerHTML = '<tr><td colspan="5" class="empty">No SLA breaches in the current filter.</td></tr>';
+    return;
+  }
+  overdueBody.innerHTML = overdue
+    .slice(0, 10)
+    .map(
+      (r) => `<tr>
+        <td><code>${escapeHTML(r.id)}</code></td>
+        <td>${escapeHTML(r.title)}</td>
+        <td>${escapeHTML(r.department)}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td class="mono text-breach">${escapeHTML(ageDays(r))}d</td>
+      </tr>`
+    )
+    .join("");
+}
+
+function renderRolePanel(filtered) {
+  if (state.role === "Staff") renderStaffPanel();
+  else if (state.role === "Manager") renderManagerPanel(filtered);
+  else renderLeadershipPanel(filtered);
 }
 
 /* --------------------------------------------------------------------------
@@ -1268,30 +1505,50 @@ function transitionButton(id, toStatus, sizeClass) {
     )}</button>`;
 }
 
+// "mine" only makes sense for Staff and "action" only for Manager; anything else falls back to "all".
+function effectiveScope() {
+  if (state.queueScope === "mine" && state.role === "Staff") return "mine";
+  if (state.queueScope === "action" && state.role === "Manager") return "action";
+  return "all";
+}
+
 function filteredQueue() {
+  const scope = effectiveScope();
   const term = state.queueSearch.trim().toLowerCase();
-  return state.requests.filter((r) => {
+  const rows = state.requests.filter((r) => {
+    if (scope === "mine" && r.requesterId !== state.staffIdentity) return false;
+    if (scope === "action" && !isOpen(r)) return false;
     if (state.queueStatus && r.status !== state.queueStatus) return false;
     if (!term) return true;
     return [r.id, r.title, r.requesterId, r.department, r.type, r.priority, r.status].some((v) =>
       String(v).toLowerCase().includes(term)
     );
   });
+  return scope === "action" ? rows.sort(oldestFirst) : rows;
 }
 
 function renderWorkflowTable() {
-  document.querySelectorAll('[data-action="queue-status"]').forEach((pill) => {
-    const active = (pill.getAttribute("data-status") || "") === state.queueStatus;
-    pill.classList.toggle("active", active);
-    pill.setAttribute("aria-pressed", active ? "true" : "false");
-  });
+  const scope = effectiveScope();
+  const togglePills = (action, attr, current) => {
+    document.querySelectorAll(`[data-action="${action}"]`).forEach((pill) => {
+      const active = (pill.getAttribute(attr) || "") === current;
+      pill.classList.toggle("active", active);
+      pill.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  };
+  togglePills("queue-status", "data-status", state.queueStatus);
+  togglePills("queue-scope", "data-scope", scope);
   const tbody = byId("workflowTableBody");
   if (!tbody) return;
   const rows = filteredQueue();
-  const count = byId("queueCount");
-  if (count) count.textContent = `Showing ${rows.length} of ${state.requests.length} requests`;
+  const scopeLabel = { mine: `raised by ${state.staffIdentity}`, action: "needing action, oldest first", all: "" }[scope];
+  setText("queueCount", `Showing ${rows.length} of ${state.requests.length} requests ${scopeLabel}`.trim());
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">No requests match the current search.</td></tr>';
+    const message =
+      scope === "mine" && !state.queueSearch && !state.queueStatus
+        ? `No requests yet for ${state.staffIdentity}. Submit one with the form.`
+        : "No requests match the current view.";
+    tbody.innerHTML = `<tr><td colspan="8" class="empty">${escapeHTML(message)}</td></tr>`;
     return;
   }
   const canAct = permissions().canTransition;
@@ -1306,7 +1563,7 @@ function renderWorkflowTable() {
         <td>${escapeHTML(r.department)}</td>
         <td>${priorityBadge(r.priority)}</td>
         <td>${statusBadge(r.status)}${overdue ? ' <span class="badge badge-overdue">Overdue</span>' : ""}</td>
-        <td>${escapeHTML(r.createdAt)}</td>
+        <td class="nowrap">${escapeHTML(r.createdAt)}</td>
         <td class="actions-cell">
           ${transitions.join(" ")}
           <button type="button" class="btn btn-sm btn-ghost" data-action="open-history" data-id="${escapeHTML(r.id)}">History</button>
@@ -1329,7 +1586,7 @@ function renderDatasetPreview() {
         <td>${escapeHTML(r.type)}</td>
         <td>${escapeHTML(r.priority)}</td>
         <td>${escapeHTML(r.status)}</td>
-        <td>${escapeHTML(r.createdAt)}</td>
+        <td class="nowrap">${escapeHTML(r.createdAt)}</td>
         <td>${escapeHTML(r.approvedAt || "—")}</td>
         <td>${escapeHTML(r.statusHistory.length)}</td>
       </tr>`
@@ -1627,6 +1884,15 @@ function handleClick(event) {
       renderWorkflowTable();
       break;
     }
+    case "queue-scope": {
+      const scope = target.getAttribute("data-scope");
+      state.queueScope = QUEUE_SCOPES.includes(scope) ? scope : "all";
+      renderWorkflowTable();
+      break;
+    }
+    case "goto-tab":
+      switchTab(target.getAttribute("data-goto"));
+      break;
     case "export-json":
       exportJSON();
       break;
@@ -1678,6 +1944,9 @@ function init() {
 
   const roleSwitcher = byId("roleSwitcher");
   if (roleSwitcher) roleSwitcher.addEventListener("change", (e) => setRole(e.target.value));
+
+  const staffIdentity = byId("staffIdentity");
+  if (staffIdentity) staffIdentity.addEventListener("change", (e) => setStaffIdentity(e.target.value));
 
   const queueSearch = byId("queueSearch");
   if (queueSearch) {
