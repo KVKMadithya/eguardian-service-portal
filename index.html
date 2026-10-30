@@ -14,24 +14,25 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f8fafc">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Runs synchronously before first paint: sets Tailwind darkMode and applies the saved theme (no flash). -->
-  <script src="theme-init.js?v=5"></script>
+  <script src="theme-init.js?v=6"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* ---------- Design tokens: light (default) ---------- */
+    /* ---------- Design tokens: light (default) — executive alabaster ---------- */
     :root {
-      --bg: #f5f7fb;
-      --bg-glow-1: rgba(99, 102, 241, 0.10);
-      --bg-glow-2: rgba(16, 185, 129, 0.09);
-      --surface: rgba(255, 255, 255, 0.72);
+      --bg: #f8fafc;
+      --bg-glow-1: rgba(99, 102, 241, 0.07);
+      --bg-glow-2: rgba(16, 185, 129, 0.06);
+      --surface: rgba(255, 255, 255, 0.95);
       --surface-solid: #ffffff;
       --surface-inset: #f8fafc;
       --surface-hover: rgba(241, 245, 249, 0.9);
-      --header-bg: rgba(245, 247, 251, 0.9);
-      --border: #e2e8f0;
+      --header-bg: rgba(248, 250, 252, 0.9);
+      --border: rgba(226, 232, 240, 0.8);
       --border-strong: #cbd5e1;
       --text: #0f172a;
       --text-2: #334155;
@@ -43,51 +44,55 @@
       --ring: rgba(16, 185, 129, 0.38);
       --code: #047857;
       --danger: #dc2626;
-      --gradient-border: linear-gradient(135deg, rgba(99, 102, 241, 0.32), rgba(16, 185, 129, 0.32));
       --gradient-danger: linear-gradient(135deg, rgba(239, 68, 68, 0.45), rgba(249, 115, 22, 0.25));
-      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-      --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px -12px rgba(15, 23, 42, 0.14);
-      --shadow-lg: 0 28px 56px -16px rgba(15, 23, 42, 0.28);
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.03), 0 8px 24px -12px rgba(15, 23, 42, 0.10);
+      --shadow-lg: 0 24px 48px -16px rgba(15, 23, 42, 0.22);
       --glow: 0 0 0 transparent;
+      --kpi-accent: rgba(16, 185, 129, 0.7);
+      --kpi-glow: rgba(16, 185, 129, 0.06);
+      --seg-track: #eef2f6;
       --chart-text: #475569;
-      --chart-grid: rgba(15, 23, 42, 0.08);
+      --chart-grid: rgba(15, 23, 42, 0.07);
       --chart-surface: #ffffff;
       --tooltip-bg: #0f172a;
       --tooltip-text: #f8fafc;
     }
 
-    /* ---------- Design tokens: dark ---------- */
+    /* ---------- Design tokens: dark — obsidian canvas, matte-glass cards ---------- */
     .dark {
-      --bg: #020617;
-      --bg-glow-1: rgba(99, 102, 241, 0.16);
-      --bg-glow-2: rgba(16, 185, 129, 0.10);
-      --surface: rgba(15, 23, 42, 0.62);
-      --surface-solid: #0f172a;
-      --surface-inset: rgba(2, 6, 23, 0.7);
-      --surface-hover: rgba(30, 41, 59, 0.55);
-      --header-bg: rgba(2, 6, 23, 0.86);
-      --border: #1e293b;
-      --border-strong: #334155;
-      --text: #f1f5f9;
-      --text-2: #cbd5e1;
-      --text-muted: #94a3b8;
-      --text-faint: #64748b;
+      --bg: #090b10;
+      --bg-glow-1: rgba(99, 102, 241, 0.10);
+      --bg-glow-2: rgba(16, 185, 129, 0.06);
+      --surface: rgba(18, 21, 30, 0.9);
+      --surface-solid: #12151e;
+      --surface-inset: #0d1017;
+      --surface-hover: rgba(255, 255, 255, 0.03);
+      --header-bg: rgba(9, 11, 16, 0.85);
+      --border: rgba(255, 255, 255, 0.07);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --text: #f4f6fa;
+      --text-2: #c9cfda;
+      --text-muted: #8b93a7;
+      --text-faint: #5d6579;
       --accent: #34d399;
       --accent-strong: #6ee7b7;
       --accent-soft: rgba(52, 211, 153, 0.12);
       --ring: rgba(52, 211, 153, 0.42);
       --code: #6ee7b7;
       --danger: #f87171;
-      --gradient-border: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(16, 185, 129, 0.22));
       --gradient-danger: linear-gradient(135deg, rgba(239, 68, 68, 0.45), rgba(249, 115, 22, 0.18));
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-      --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px -16px rgba(0, 0, 0, 0.7);
-      --shadow-lg: 0 32px 64px -16px rgba(0, 0, 0, 0.8);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+      --shadow-md: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 16px 40px -20px rgba(0, 0, 0, 0.8);
+      --shadow-lg: 0 32px 64px -16px rgba(0, 0, 0, 0.85);
       --glow: 0 0 24px -6px rgba(52, 211, 153, 0.25);
-      --chart-text: #94a3b8;
-      --chart-grid: rgba(148, 163, 184, 0.14);
-      --chart-surface: #0f172a;
-      --tooltip-bg: #f8fafc;
+      --kpi-accent: rgba(52, 211, 153, 0.85);
+      --kpi-glow: rgba(52, 211, 153, 0.08);
+      --seg-track: rgba(255, 255, 255, 0.06);
+      --chart-text: #8b93a7;
+      --chart-grid: rgba(255, 255, 255, 0.06);
+      --chart-surface: #12151e;
+      --tooltip-bg: #f4f6fa;
       --tooltip-text: #0f172a;
     }
 
@@ -131,7 +136,7 @@
     .theme-toggle:active { transform: scale(0.92); }
     .theme-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
     .theme-toggle svg { position: absolute; inset: 0; margin: auto; width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-      transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease; }
+      transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 350ms ease; }
     .theme-toggle .icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
     .theme-toggle .icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.4); }
     .dark .theme-toggle .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.4); }
@@ -144,14 +149,19 @@
     .tab-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
     .tab-btn.active { color: var(--accent-strong); background: var(--accent-soft); border-color: var(--ring); box-shadow: var(--glow); }
 
-    /* ---------- Cards (glass + gradient accent border) ---------- */
-    .card { position: relative; background: var(--surface); border: 1px solid transparent; border-radius: 0.9rem; padding: 1.35rem; box-shadow: var(--shadow-md);
-      backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); }
-    .card::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: var(--gradient-border); pointer-events: none;
+    /* ---------- Cards (matte glass, crisp 1px border) ---------- */
+    .card { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 0.9rem; padding: 1.35rem; box-shadow: var(--shadow-md);
+      backdrop-filter: blur(12px) saturate(140%); -webkit-backdrop-filter: blur(12px) saturate(140%); }
+    .card-danger::before, .card-success::before, .role-banner::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
       -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
     .card-danger::before { background: var(--gradient-danger); }
     .card-success::before { background: linear-gradient(135deg, rgba(16, 185, 129, 0.5), rgba(99, 102, 241, 0.25)); }
-    .card-kpi, a.link-card { transition: transform 200ms ease-out, box-shadow 300ms ease-in-out, background-color 300ms ease-in-out; }
+    /* KPI cards: soft top-border highlight + glow */
+    .card-kpi { overflow: hidden; }
+    .card-kpi::before { content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1px; background: linear-gradient(90deg, transparent, var(--kpi-accent), transparent); pointer-events: none; }
+    .card-kpi::after { content: ""; position: absolute; inset: 0; background: radial-gradient(70% 45% at 50% 0%, var(--kpi-glow), transparent 75%); pointer-events: none; }
+    .card-kpi-danger { --kpi-accent: rgba(239, 68, 68, 0.75); --kpi-glow: rgba(239, 68, 68, 0.07); }
+    .card-kpi, a.link-card { transition: transform 200ms ease-out, box-shadow 300ms ease-in-out, background-color 300ms ease-in-out, border-color 300ms ease-in-out; }
     .card-kpi:hover, a.link-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg), var(--glow); }
     a.link-card { display: block; }
     a.link-card:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
@@ -164,7 +174,8 @@
     .thead-solid { background: var(--surface-solid); }
 
     /* ---------- Tab panel entrance ---------- */
-    [role="tabpanel"]:not([hidden]) { animation: panel-in 300ms ease-out both; }
+    .tab-panel-enter { animation: tab-panel-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes tab-panel-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes panel-in { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: translateY(0); } }
 
     /* ---------- Form controls ---------- */
@@ -274,8 +285,8 @@
     /* ---------- Modal ---------- */
     .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(2, 6, 23, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: 5vh 1rem; overflow-y: auto; animation: fade-in 200ms ease-out both; }
     .modal-panel { position: relative; width: 100%; max-width: 40rem; background: var(--surface-solid); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; box-shadow: var(--shadow-lg); animation: modal-in 250ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes modal-in { from { opacity: 0; transform: translateY(0.75rem) scale(0.97); } to { opacity: 1; transform: none; } }
+    @keyframes fade-in { from { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); } to { opacity: 1; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); } }
+    @keyframes modal-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
     /* ---------- Toasts ---------- */
     .toast-container { position: fixed; right: 1rem; bottom: 1rem; z-index: 60; display: flex; flex-direction: column; gap: 0.5rem; max-width: calc(100vw - 2rem); }
@@ -306,6 +317,35 @@
     .mini-stat { background: var(--surface-inset); border: 1px solid var(--border); border-radius: 0.7rem; padding: 0.7rem 0.9rem; }
     .mini-stat-value { margin-top: 0.15rem; font-size: 1.5rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
     .text-breach { color: var(--danger); font-weight: 600; }
+
+    /* ---------- KPI micro-visuals ---------- */
+    .kpi-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-top: 0.5rem; }
+    .kpi-pill { display: inline-flex; align-items: center; white-space: nowrap; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; border: 1px solid transparent; }
+    .kpi-pill:empty { display: none; }
+    .kpi-pill-good { color: #047857; background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.3); }
+    .kpi-pill-warn { color: #b45309; background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.3); }
+    .kpi-pill-bad { color: #b91c1c; background: rgba(239, 68, 68, 0.10); border-color: rgba(239, 68, 68, 0.3); }
+    .kpi-pill-neutral { color: var(--text-2); background: var(--surface-inset); border-color: var(--border); }
+    .dark .kpi-pill-good { color: #6ee7b7; box-shadow: 0 0 12px -4px rgba(16, 185, 129, 0.5); }
+    .dark .kpi-pill-warn { color: #fcd34d; box-shadow: 0 0 12px -4px rgba(245, 158, 11, 0.5); }
+    .dark .kpi-pill-bad { color: #fca5a5; box-shadow: 0 0 12px -4px rgba(239, 68, 68, 0.5); }
+    .seg-bar { display: flex; gap: 3px; height: 6px; margin-top: 0.9rem; border-radius: 999px; background: var(--seg-track); overflow: hidden; }
+    .seg { display: block; height: 100%; border-radius: 999px; transition: width 400ms cubic-bezier(0.22, 1, 0.36, 1); }
+    .seg-submitted { background: #64748b; }
+    .seg-under-review { background: #f59e0b; }
+    .seg-approved { background: #3b82f6; }
+    .seg-good { background: #10b981; }
+    .seg-bad { background: #ef4444; }
+    .seg-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.6rem; margin-top: 0.55rem; font-size: 0.7rem; color: var(--text-muted); }
+    .seg-legend .dot { display: inline-block; width: 0.45rem; height: 0.45rem; border-radius: 50%; margin-right: 0.25rem; }
+
+    /* ---------- Segmented (pill) controls ---------- */
+    .segmented { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-inset); border: 1px solid var(--border); }
+    .segmented .pill { border-color: transparent; background: transparent; box-shadow: none; }
+    .segmented .pill.active { background: var(--surface-solid); color: var(--text); border-color: var(--border); box-shadow: var(--shadow-sm); }
+    .dark .segmented .pill.active { background: rgba(255, 255, 255, 0.08); }
+    .filter-bar .field { border-radius: 999px; padding-left: 0.9rem; }
+    .identity-lock { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.75rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-inset); color: var(--text); }
 
     /* ---------- Accessibility: honour reduced-motion ---------- */
     @media (prefers-reduced-motion: reduce) {
@@ -366,10 +406,15 @@
             <p id="roleBannerText" class="muted"></p>
           </div>
         </div>
-        <div data-roles="Staff">
-          <label for="staffIdentity" class="field-label">Acting as (demo identity)</label>
-          <select id="staffIdentity" class="field mono w-44" aria-describedby="staffIdentityHint"></select>
-          <p id="staffIdentityHint" class="muted mt-1 text-xs">Anonymized employee ID — no real personal data.</p>
+        <div data-roles="Manager">
+          <label for="onBehalfOf" class="field-label">Log request on behalf of</label>
+          <select id="onBehalfOf" class="field mono w-48" aria-describedby="onBehalfOfHint"></select>
+          <p id="onBehalfOfHint" class="muted mt-1 text-xs">Managers only · anonymized IDs, no personal data.</p>
+        </div>
+        <div data-roles="Staff" class="identity-lock" aria-label="Signed-in identity is locked">
+          <span class="field-label mb-0">Signed in as</span>
+          <span class="mono font-semibold">EMP-130</span>
+          <span class="kpi-pill kpi-pill-neutral">Locked</span>
         </div>
       </div>
       <ul id="roleBannerPerms" class="mt-3 flex flex-wrap gap-2" aria-label="Permissions for this view"></ul>
@@ -382,7 +427,7 @@
         <p class="section-sub">Live KPIs and charts computed from the current request dataset. Filters apply to every KPI and chart. <span id="kpiRecordCount" class="mono text-emerald-600 dark:text-emerald-400"></span></p>
       </div>
 
-      <div class="card">
+      <div class="card filter-bar">
         <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           <div>
             <label for="filterDepartment" class="field-label">Department</label>
@@ -413,23 +458,27 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="card card-kpi">
           <p class="kpi-label">Open Requests</p>
-          <p id="kpiOpen" class="kpi-value mt-2">0</p>
-          <p class="muted mt-1">Submitted, Under Review or Approved</p>
+          <div class="kpi-row"><p id="kpiOpen" class="kpi-value">0</p><span id="kpiOpenPill" class="kpi-pill kpi-pill-neutral"></span></div>
+          <div id="kpiOpenBar" class="seg-bar" role="img"></div>
+          <p class="seg-legend"><i class="dot seg-submitted"></i>Submitted <i class="dot seg-under-review"></i>Review <i class="dot seg-approved"></i>Approved</p>
         </div>
         <div class="card card-kpi">
           <p class="kpi-label">Avg Days to Approval</p>
-          <p id="kpiAvgApproval" class="kpi-value mt-2">0.0</p>
-          <p class="muted mt-1">createdAt → approvedAt, Approved + Completed</p>
+          <div class="kpi-row"><p id="kpiAvgApproval" class="kpi-value">0.0</p><span id="kpiAvgPill" class="kpi-pill kpi-pill-neutral"></span></div>
+          <div id="kpiAvgBar" class="seg-bar" role="img"></div>
+          <p class="seg-legend">createdAt → approvedAt, against the SLA</p>
         </div>
         <div class="card card-kpi">
           <p class="kpi-label">Approval Rate (%)</p>
-          <p id="kpiApprovalRate" class="kpi-value mt-2">0.0%</p>
-          <p class="muted mt-1">(Approved + Completed) ÷ decided</p>
+          <div class="kpi-row"><p id="kpiApprovalRate" class="kpi-value">0.0%</p><span id="kpiRatePill" class="kpi-pill kpi-pill-neutral"></span></div>
+          <div id="kpiRateBar" class="seg-bar" role="img"></div>
+          <p class="seg-legend"><i class="dot seg-good"></i>Approved + Completed <i class="dot seg-bad"></i>Rejected</p>
         </div>
-        <div class="card card-kpi card-danger">
+        <div class="card card-kpi card-kpi-danger">
           <p class="kpi-label">Overdue Requests (&gt;<span id="slaThreshold">7</span> Days SLA)</p>
-          <p id="kpiOverdue" class="kpi-value mt-2 text-red-600 dark:text-red-300">0</p>
-          <p class="muted mt-1">Open requests older than the SLA threshold</p>
+          <div class="kpi-row"><p id="kpiOverdue" class="kpi-value text-red-600 dark:text-red-300">0</p><span id="kpiOverduePill" class="kpi-pill kpi-pill-neutral"></span></div>
+          <div id="kpiOverdueBar" class="seg-bar" role="img"></div>
+          <p class="seg-legend"><i class="dot seg-bad"></i>Overdue <i class="dot seg-good"></i>Within SLA</p>
         </div>
       </div>
 
@@ -659,18 +708,22 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
           </div>
           <div class="mb-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Queue scope">
             <span class="field-label mb-0 mr-1">View</span>
-            <button type="button" class="pill" data-action="queue-scope" data-scope="mine" data-roles="Staff">My requests</button>
-            <button type="button" class="pill" data-action="queue-scope" data-scope="action" data-roles="Manager">Needs action</button>
-            <button type="button" class="pill" data-action="queue-scope" data-scope="all">All requests</button>
+            <span class="segmented">
+              <button type="button" class="pill" data-action="queue-scope" data-scope="mine" data-roles="Staff">My requests</button>
+              <button type="button" class="pill" data-action="queue-scope" data-scope="action" data-roles="Manager">Needs action</button>
+              <button type="button" class="pill" data-action="queue-scope" data-scope="all">All requests</button>
+            </span>
           </div>
           <div class="mb-3 flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter queue by status">
             <span class="field-label mb-0 mr-1">Status</span>
+            <span class="segmented">
             <button type="button" class="pill active" data-action="queue-status" data-status="">All</button>
             <button type="button" class="pill" data-action="queue-status" data-status="Submitted">Submitted</button>
             <button type="button" class="pill" data-action="queue-status" data-status="Under Review">Under Review</button>
             <button type="button" class="pill" data-action="queue-status" data-status="Approved">Approved</button>
             <button type="button" class="pill" data-action="queue-status" data-status="Rejected">Rejected</button>
             <button type="button" class="pill" data-action="queue-status" data-status="Completed">Completed</button>
+            </span>
           </div>
           <div class="overflow-x-auto">
             <table class="data-table">
@@ -869,7 +922,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             <dl class="gwt mt-2">
               <dt>Given</dt><dd>I switch the Role selector to Staff, Manager or Leadership</dd>
               <dt>When</dt><dd>the view changes</dd>
-              <dt>Then</dt><dd>Staff land on Workflow showing <em>My requests</em> with their Employee ID pre-filled; Managers land on Workflow showing <em>Needs action</em> (oldest first) with an Action Queue on the dashboard; Leadership land on a read-only Dashboard with an SLA-breach breakdown and cannot submit or change requests</dd>
+              <dt>Then</dt><dd>Staff land on Workflow showing <em>My requests</em> with their Employee ID locked (they cannot submit as anyone else, and any direct status-change attempt returns <em>Access Denied</em>); Managers land on Workflow showing <em>Needs action</em> (oldest first) with an Action Queue on the dashboard; Leadership land on a read-only Dashboard with an SLA-breach breakdown and cannot submit or change requests</dd>
             </dl>
           </article>
         </div>
@@ -901,7 +954,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             <li><strong class="text-slate-900 dark:text-slate-100">Strict state machine:</strong> statuses change only through <code>VALID_TRANSITIONS</code>; there is no admin override.</li>
             <li><strong class="text-slate-900 dark:text-slate-100">Fail-closed CI/CD:</strong> if secret scanning, linting or the dependency audit fails, the deploy job does not run.</li>
             <li>Role switching is a demo convenience, not authentication; production would map roles from SSO.</li>
-            <li>The Staff "Acting as" selector stands in for a signed-in employee; it only lists anonymized <code>EMP-xxx</code> IDs.</li>
+            <li>Staff View represents one signed-in employee (<code>EMP-130</code>); only Managers may log requests on behalf of other anonymized <code>EMP-xxx</code> IDs. All role checks run in the browser as defence in depth — production would enforce them server-side.</li>
           </ul>
         </div>
 
@@ -963,30 +1016,33 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div class="card">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2">
             <p class="kpi-label">Gate 1 · Secret Detection</p>
-            <span class="badge badge-pass">PASSED</span>
+            <span class="badge badge-under-review">AWAITING CI RUN</span>
           </div>
           <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">gitleaks/gitleaks-action@v2</p>
-          <p class="muted mt-2">Scans the full git history (<code>fetch-depth: 0</code>) for API keys, tokens and credentials. Last run: no leaks found.</p>
+          <p class="muted mt-2">Scans the full git history (<code>fetch-depth: 0</code>) for API keys, tokens and credentials on every push to <code>main</code>. Its first result is recorded in the <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions" class="text-emerald-700 dark:text-emerald-300 underline">Actions run history</a>.</p>
         </div>
         <div class="card">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2">
             <p class="kpi-label">Gate 2 · SAST &amp; Security Linting</p>
             <span class="badge badge-pass">PASSED</span>
           </div>
           <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">eslint + eslint-plugin-security</p>
-          <p class="muted mt-2"><code>npm run lint</code> applies <code>eslint:recommended</code> and <code>plugin:security/recommended-legacy</code> to <code>app.js</code> and <code>theme-init.js</code>. Last run: 0 errors, 0 warnings.</p>
+          <p class="muted mt-2"><code>npm run lint</code> applies <code>eslint:recommended</code> and <code>plugin:security/recommended-legacy</code> to <code>app.js</code> and <code>theme-init.js</code>.</p>
+          <p class="mt-2 text-xs"><span class="kpi-pill kpi-pill-good">Local run · Oct 30, 2026</span> <span class="muted">0 errors, 0 warnings</span></p>
         </div>
         <div class="card">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2">
             <p class="kpi-label">Gate 3 · Dependency Scanning</p>
             <span class="badge badge-pass">PASSED</span>
           </div>
           <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">npm audit --audit-level=critical</p>
-          <p class="muted mt-2">Fails the build on any critical CVE in the dependency tree. Last run: found 0 vulnerabilities.</p>
+          <p class="muted mt-2">Fails the build on any critical CVE in the dependency tree.</p>
+          <p class="mt-2 text-xs"><span class="kpi-pill kpi-pill-good">Local run · Oct 30, 2026</span> <span class="muted">found 0 vulnerabilities</span></p>
         </div>
       </div>
+      <p class="muted">Gates 2 and 3 above were run locally on Oct 30, 2026. The authoritative, timestamped results for all three gates are in the GitHub Actions history for each push.</p>
 
       <div class="card">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -1101,60 +1157,58 @@ jobs:
             <p class="muted mt-1">DevSecOps pipeline configuration, ESLint v8 plugin compatibility research, and requirements analysis.</p>
           </div>
         </div>
-        <p class="muted mt-3">All AI output was reviewed, tested in the browser and gated by the CI pipeline before being merged. The issues below were found during that review.</p>
+        <p class="muted mt-3">All AI output was reviewed, linted, audited and tested in a headless Chromium browser across all roles and both themes; the CI pipeline then gates every push to <code>main</code>. The issues below were found during that review.</p>
       </div>
 
       <div class="space-y-4">
         <article class="card">
           <div class="flex flex-wrap items-center gap-2">
             <span class="badge badge-rejected">Security</span>
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 1 — DOM XSS via raw <code>innerHTML</code></h3>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 1 — Staff could impersonate any employee &amp; RBAC relied on hidden buttons</h3>
           </div>
-          <p class="muted mt-2">Generated table-rendering code interpolated user-supplied titles straight into <code>innerHTML</code>. A title such as <code>&lt;img src=x onerror=alert(1)&gt;</code> would execute in every viewer's browser. Fixed with an <code>escapeHTML()</code> sanitizer on every dynamic value, backed by a CSP header.</p>
+          <p class="muted mt-2">The generated Staff View included an "Acting as" dropdown listing every <code>EMP-xxx</code> ID, and the submit handler trusted whatever Employee ID was in the input — so a staff user could raise requests as someone else. Status changes were blocked only by hiding buttons. Fixed by locking Staff to one identity enforced in the handler (not read from the DOM), moving the picker to Manager View, and adding a hard role check at the top of <code>transitionRequest()</code>.</p>
           <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
 <pre class="code-block code-before">// BEFORE
-row.innerHTML = `&lt;td&gt;${req.title}&lt;/td&gt;
-  &lt;td&gt;${req.description}&lt;/td&gt;`;</pre>
-<pre class="code-block code-after">// AFTER
-function escapeHTML(str) {
-  return String(str).replace(/[&amp;&lt;&gt;"'`]/g,
-    (ch) =&gt; HTML_ESCAPES[ch]);
-}
-row.innerHTML = `&lt;td&gt;${escapeHTML(req.title)}&lt;/td&gt;
-  &lt;td&gt;${escapeHTML(req.description)}&lt;/td&gt;`;
-// + &lt;meta http-equiv="Content-Security-Policy" ...&gt;</pre>
-          </div>
-        </article>
+&lt;select id="staffIdentity"&gt;…every EMP ID…&lt;/select&gt;
+requesterId: read("requesterId"), // trusted from DOM
 
-        <article class="card">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="badge badge-under-review">Logic</span>
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 2 — Unrestricted status dropdown</h3>
-          </div>
-          <p class="muted mt-2">The first draft offered a free <code>&lt;select&gt;</code> of all five statuses, so a request could jump from Submitted straight to Completed or be reopened after rejection. Replaced with a deterministic <code>VALID_TRANSITIONS</code> state machine and per-transition buttons.</p>
-          <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
-<pre class="code-block code-before">// BEFORE
-statusSelect.addEventListener("change", (e) =&gt; {
-  request.status = e.target.value; // any → any
-  save();
-});</pre>
+function transitionRequest(id, toStatus) {
+  if (!permissions().canTransition) …</pre>
 <pre class="code-block code-after">// AFTER
-const VALID_TRANSITIONS = {
-  Submitted: ["Under Review"],
-  "Under Review": ["Approved", "Rejected"],
-  Approved: ["Completed"],
-  Rejected: [], Completed: [],
-};
-if (!canTransition(request.status, toStatus)) {
-  showToast(`Blocked: ${request.status} → ${toStatus}`, "error");
+const STAFF_IDENTITY = "EMP-130"; // locked
+requesterId: state.role === "Staff"
+  ? STAFF_IDENTITY        // enforced, not read
+  : read("requesterId"),
+
+if (state.role !== "Manager") {
+  showToast("Access Denied: Only Department Managers " +
+    "can transition request statuses", "error");
   return false;
 }</pre>
           </div>
+          <p class="muted mt-2">Limitation recorded: this is client-side defence in depth. Real access control needs server-side authentication.</p>
         </article>
 
         <article class="card">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="badge badge-approved">Quality / DevSecOps</span>
+            <span class="badge badge-under-review">Quality</span>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 2 — Invisible BOM character failed the lint gate</h3>
+          </div>
+          <p class="muted mt-2">The generated CSV exporter prepended a byte-order mark so Excel opens files as UTF-8, but the escape <code>\uFEFF</code> was written into <code>app.js</code> as the raw, invisible U+FEFF character. ESLint failed Gate 2 with <code>Irregular whitespace not allowed (no-irregular-whitespace)</code>. Fixed by using an explicit escape sequence.</p>
+          <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+<pre class="code-block code-before">// BEFORE — raw U+FEFF hidden before ${csv}
+downloadFile(name, `&lt;U+FEFF&gt;${csv}`, "text/csv");
+// eslint: 1373:52 error Irregular whitespace
+//         not allowed  no-irregular-whitespace</pre>
+<pre class="code-block code-after">// AFTER — explicit, visible escape
+downloadFile(name, "\uFEFF" + csv,
+  "text/csv;charset=utf-8");</pre>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="badge badge-approved">DevSecOps</span>
             <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 3 — ESLint v8 circular config error</h3>
           </div>
           <p class="muted mt-2"><code>eslint-plugin-security</code> v2 exports a flat-config object as <code>recommended</code>. Under ESLint v8's legacy <code>.eslintrc</code> format this crashed the lint gate with <code>TypeError: Converting circular structure to JSON</code>. Switched to the legacy preset.</p>
@@ -1174,22 +1228,17 @@ if (!canTransition(request.status, toStatus)) {
 
         <article class="card">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="badge badge-under-review">Logic / Quality</span>
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 4 — <code>NaN%</code> on empty filters &amp; Chart.js canvas leaks</h3>
+            <span class="badge badge-approved">Quality / Deployment</span>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 4 — Stale cached <code>app.js</code> made features look broken</h3>
           </div>
-          <p class="muted mt-2">Filtering to a set with no decided requests divided by zero and rendered <code>NaN%</code>. Each re-render also created a new Chart on the same canvas without destroying the old one, causing flicker, stale tooltips and growing memory use. Added zero-guards and <code>.destroy()</code> before each re-create.</p>
+          <p class="muted mt-2">After an update the browser served a cached copy of the old <code>app.js</code> alongside the new <code>index.html</code>, so the theme toggle did nothing. Diagnosed by comparing chart colours in a screenshot with the current code, then confirmed in headless Chromium. GitHub Pages also caches assets for ~10 minutes, so reviewers would hit the same problem. Fixed with versioned script URLs, bumped on every release.</p>
           <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
-<pre class="code-block code-before">// BEFORE
-const rate = (approved / decided * 100).toFixed(1) + "%";
-deptChart = new Chart(canvas, config);</pre>
-<pre class="code-block code-after">// AFTER
-const approvalRate = decided &gt; 0
-  ? (approvedOrCompleted / decided) * 100 : 0;
-
-function createChart(key, config) {
-  destroyChart(key); // existing.destroy()
-  state.charts[key] = new Chart(byId(key), config);
-}</pre>
+<pre class="code-block code-before">&lt;!-- BEFORE --&gt;
+&lt;script src="theme-init.js"&gt;&lt;/script&gt;
+&lt;script src="app.js" defer&gt;&lt;/script&gt;</pre>
+<pre class="code-block code-after">&lt;!-- AFTER — bump ?v= on every release --&gt;
+&lt;script src="theme-init.js?v=6"&gt;&lt;/script&gt;
+&lt;script src="app.js?v=6" defer&gt;&lt;/script&gt;</pre>
           </div>
         </article>
       </div>
@@ -1201,8 +1250,8 @@ function createChart(key, config) {
             <div>
               <p class="font-semibold text-slate-900 dark:text-slate-100">Staff — submit a request</p>
               <ol class="mt-1 list-decimal space-y-1 pl-5">
-                <li>Choose <em>Staff View</em> in the Role selector and pick your ID under <em>Acting as</em>; the portal opens <em>Workflow</em> showing <em>My requests</em>.</li>
-                <li>Complete <em>Submit New Request</em> — your Employee ID is filled in for you.</li>
+                <li>Choose <em>Staff View</em> in the Role selector; you are signed in as <code>EMP-130</code> and the portal opens <em>Workflow</em> showing <em>My requests</em>.</li>
+                <li>Complete <em>Submit New Request</em> — your Employee ID is filled in and locked, so requests are always raised under your own identity.</li>
                 <li>Fix any red inline messages and submit; your request appears at the top of the queue as <em>Submitted</em>.</li>
                 <li>Track progress in <em>My Requests</em> on the Dashboard, or click <em>History</em> for the full audit trail.</li>
               </ol>
@@ -1210,7 +1259,7 @@ function createChart(key, config) {
             <div>
               <p class="font-semibold text-slate-900 dark:text-slate-100">Managers — review and approve</p>
               <ol class="mt-1 list-decimal space-y-1 pl-5">
-                <li>Choose <em>Manager View</em>; the queue switches to <em>Needs action</em>, oldest first, with transition buttons on each row.</li>
+                <li>Choose <em>Manager View</em>; the queue switches to <em>Needs action</em>, oldest first, with transition buttons on each row. Use <em>Log request on behalf of</em> in the banner to raise a request for a staff member.</li>
                 <li>Start with overdue (red-edged) rows and click <em>Move to Review</em>; the Dashboard's <em>Action Queue</em> offers the same buttons.</li>
                 <li>For a decision, open <em>History</em>, add a manager note, and click <em>Approve</em> or <em>Reject</em>.</li>
                 <li>Once delivered, click <em>Mark Completed</em> on approved requests.</li>
@@ -1286,6 +1335,6 @@ git push origin main</pre>
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <!-- Bump ?v= on every release so browsers and GitHub Pages' 10-minute cache never serve a stale app.js. -->
-  <script src="app.js?v=5" defer></script>
+  <script src="app.js?v=6" defer></script>
 </body>
 </html>

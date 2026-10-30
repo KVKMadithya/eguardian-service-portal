@@ -60,7 +60,7 @@ const ROLE_PROFILES = Object.freeze({
     summary: "Submit service requests and track your own requests through approval.",
     toast: "showing your requests.",
     can: Object.freeze(["Submit new requests", "Track your requests & history", "View dashboard figures"]),
-    cannot: Object.freeze(["Change request status"]),
+    cannot: Object.freeze(["Change request status", "Submit as another employee"]),
   }),
   Manager: Object.freeze({
     home: "workflow",
@@ -80,7 +80,7 @@ const ROLE_PROFILES = Object.freeze({
   }),
 });
 const QUEUE_SCOPES = Object.freeze(["mine", "action", "all"]);
-const DEFAULT_STAFF_IDENTITY = "EMP-130";
+const STAFF_IDENTITY = "EMP-130"; // Staff View is locked to this demo identity (no impersonation)
 const MONTH_ABBR = Object.freeze(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]);
 
 const STATUS_COLORS = Object.freeze({
@@ -795,7 +795,7 @@ const state = {
   role: "Staff",
   activeTab: "dashboard",
   selectedRequestId: null,
-  staffIdentity: DEFAULT_STAFF_IDENTITY,
+  onBehalfOf: "",
   queueScope: "mine",
   queueSearch: "",
   queueStatus: "",
@@ -922,6 +922,8 @@ function syncThemeToggle() {
 function applyTheme(theme, persist) {
   if (!THEMES.includes(theme)) return;
   document.documentElement.classList.toggle("dark", theme === "dark");
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.setAttribute("content", theme === "dark" ? "#090b10" : "#f8fafc");
   if (persist) {
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
@@ -962,20 +964,22 @@ function setRole(role) {
     void banner.offsetWidth; // restart the entrance animation
     banner.classList.add("role-banner-enter");
   }
-  showToast(`${role} View — ${profile.toast}`, "info");
+  showToast(`Switched to ${role} View — ${profile.toast}`, "info");
 }
 
-function setStaffIdentity(id) {
+// Manager-only: pick the employee a request is being logged for. Staff can never change identity.
+function setOnBehalfOf(id) {
+  if (state.role !== "Manager") return;
   const value = String(id || "").toUpperCase();
-  if (!EMPLOYEE_ID_PATTERN.test(value)) return;
-  state.staffIdentity = value;
-  applyRoleUI();
-  renderAll();
+  state.onBehalfOf = EMPLOYEE_ID_PATTERN.test(value) ? value : "";
+  const form = byId("requestForm");
+  const requester = form ? form.elements.namedItem("requesterId") : null;
+  if (requester) requester.value = state.onBehalfOf;
 }
 
 function requesterIds() {
   const ids = new Set(state.requests.map((r) => r.requesterId));
-  ids.add(state.staffIdentity);
+  ids.add(STAFF_IDENTITY);
   return Array.from(ids).sort();
 }
 
@@ -986,7 +990,7 @@ function renderRoleBanner(profile) {
   if (icon) icon.textContent = state.role.charAt(0);
   const title = byId("roleBannerTitle");
   if (title) {
-    title.textContent = state.role === "Staff" ? `Staff View · acting as ${state.staffIdentity}` : `${state.role} View`;
+    title.textContent = state.role === "Staff" ? `Staff View · signed in as ${STAFF_IDENTITY}` : `${state.role} View`;
   }
   const text = byId("roleBannerText");
   if (text) text.textContent = profile.summary;
@@ -1019,9 +1023,12 @@ function applyRoleUI() {
     el.hidden = !perms.canTransition;
   });
 
-  populateSelect("staffIdentity", requesterIds());
-  const identity = byId("staffIdentity");
-  if (identity) identity.value = state.staffIdentity;
+  populateSelect("onBehalfOf", requesterIds(), "Choose employee…");
+  const picker = byId("onBehalfOf");
+  if (picker) {
+    picker.value = state.onBehalfOf;
+    picker.disabled = state.role !== "Manager";
+  }
 
   const form = byId("requestForm");
   if (form) {
@@ -1032,15 +1039,16 @@ function applyRoleUI() {
     if (requester) {
       const isStaff = state.role === "Staff";
       requester.readOnly = isStaff;
-      if (isStaff) requester.value = state.staffIdentity;
+      requester.setAttribute("aria-readonly", isStaff ? "true" : "false");
+      requester.value = isStaff ? STAFF_IDENTITY : state.onBehalfOf;
     }
   }
   const identityNote = byId("formIdentityNote");
   if (identityNote) {
     identityNote.textContent =
       state.role === "Staff"
-        ? `Submitting as ${state.staffIdentity}. Change identity in the banner above.`
-        : "Submitting on behalf of an employee — enter their EMP ID.";
+        ? `Submitting as ${STAFF_IDENTITY} (locked to your signed-in identity).`
+        : "Logging on behalf of an employee — pick them in the banner or type their EMP ID.";
   }
 
   renderRoleBanner(profile);
@@ -1056,8 +1064,10 @@ function canTransition(fromStatus, toStatus) {
 }
 
 function transitionRequest(id, toStatus, note) {
-  if (!permissions().canTransition) {
-    showToast(`${state.role} role cannot change request status.`, "error");
+  // Hard function-level guard: the UI hides these buttons, but direct calls are refused too.
+  // Note: this is client-side defence in depth, not access control — real RBAC needs a server.
+  if (state.role !== "Manager") {
+    showToast("Access Denied: Only Department Managers can transition request statuses", "error");
     return false;
   }
   const request = findRequest(id);
@@ -1143,8 +1153,8 @@ function nextRequestId() {
 function handleSubmit(event) {
   event.preventDefault();
   const form = event.currentTarget;
-  if (!permissions().canSubmit) {
-    showToast(`${state.role} role cannot submit requests.`, "error");
+  if (state.role === "Leadership" || !permissions().canSubmit) {
+    showToast("Access Denied: Leadership View is read-only and cannot submit requests", "error");
     return;
   }
   const read = (name) => {
@@ -1153,7 +1163,8 @@ function handleSubmit(event) {
   };
   const result = validateRequestInput({
     title: read("title"),
-    requesterId: read("requesterId"),
+    // Staff identity is enforced here, not trusted from the (read-only) input, so DOM edits can't spoof it.
+    requesterId: state.role === "Staff" ? STAFF_IDENTITY : read("requesterId"),
     department: read("department"),
     type: read("type"),
     priority: read("priority"),
@@ -1240,17 +1251,115 @@ function computeKPIs(requests) {
   };
 }
 
+function prefersReducedMotion() {
+  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+// 300ms requestAnimationFrame tween from the previous value; final text is always the exact KPI string.
+function animateKPI(id, finalText) {
+  const el = byId(id);
+  if (!el) return;
+  const text = String(finalText);
+  const target = Number.parseFloat(text);
+  const from = Number.parseFloat(el.getAttribute("data-value") || "0");
+  el.setAttribute("data-value", Number.isFinite(target) ? String(target) : "0");
+  if (!Number.isFinite(target) || target === from || prefersReducedMotion()) {
+    el.textContent = text;
+    return;
+  }
+  const decimals = (text.split(".")[1] || "").replace(/\D/g, "").length;
+  const suffix = text.endsWith("%") ? "%" : "";
+  const tweenId = Symbol("kpi-tween");
+  el.kpiAnimation = tweenId;
+  const start = window.performance.now();
+  const step = (now) => {
+    if (el.kpiAnimation !== tweenId) return; // a newer update superseded this tween
+    const t = Math.min(1, (now - start) / 300);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = t < 1 ? `${(from + (target - from) * eased).toFixed(decimals)}${suffix}` : text;
+    if (t < 1) window.requestAnimationFrame(step);
+  };
+  window.requestAnimationFrame(step);
+}
+
+function pct(part, whole) {
+  return whole > 0 ? Math.max(0, Math.min(100, (part / whole) * 100)) : 0;
+}
+
+function renderSegmentBar(id, segments, label) {
+  const bar = byId(id);
+  if (!bar) return;
+  bar.setAttribute("aria-label", label);
+  bar.innerHTML = segments
+    .map((s) => `<span class="seg ${escapeHTML(s.cls)}" style="width: ${pct(s.value, s.total).toFixed(2)}%" title="${escapeHTML(s.title)}"></span>`)
+    .join("");
+}
+
+function setPill(id, text, tone) {
+  const el = byId(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = `kpi-pill kpi-pill-${tone}`;
+}
+
+function renderKPIMicroVisuals(requests) {
+  const open = requests.filter(isOpen);
+  const overdue = open.filter(isOverdue).length;
+  const count = (status) => requests.filter((r) => r.status === status).length;
+  const approved = count("Approved") + count("Completed");
+  const rejected = count("Rejected");
+  const decided = approved + rejected;
+  const avg = Number.parseFloat(computeKPIs(requests).avgDaysToApproval);
+  const sla = PORTAL_CONFIG.slaThresholdDays;
+
+  renderSegmentBar(
+    "kpiOpenBar",
+    ["Submitted", "Under Review", "Approved"].map((s) => ({
+      cls: `seg-${s.toLowerCase().replace(/\s+/g, "-")}`,
+      value: open.filter((r) => r.status === s).length,
+      total: open.length,
+      title: `${s}: ${open.filter((r) => r.status === s).length}`,
+    })),
+    "Open requests by stage"
+  );
+  setPill("kpiOpenPill", `${overdue} past SLA`, overdue > 0 ? "warn" : "good");
+
+  renderSegmentBar(
+    "kpiAvgBar",
+    [{ cls: avg <= sla ? "seg-good" : "seg-bad", value: Math.min(avg, sla), total: sla, title: `${avg.toFixed(1)} of ${sla} SLA days` }],
+    `Average approval time against the ${sla}-day SLA`
+  );
+  setPill("kpiAvgPill", avg <= sla ? `Within ${sla}-day SLA` : `Over ${sla}-day SLA`, avg <= sla ? "good" : "bad");
+
+  renderSegmentBar(
+    "kpiRateBar",
+    [
+      { cls: "seg-good", value: approved, total: decided, title: `Approved/Completed: ${approved}` },
+      { cls: "seg-bad", value: rejected, total: decided, title: `Rejected: ${rejected}` },
+    ],
+    "Approved versus rejected decisions"
+  );
+  setPill("kpiRatePill", `${approved} of ${decided} decided`, "neutral");
+
+  renderSegmentBar(
+    "kpiOverdueBar",
+    [
+      { cls: "seg-bad", value: overdue, total: open.length, title: `Overdue: ${overdue}` },
+      { cls: "seg-good", value: open.length - overdue, total: open.length, title: `Within SLA: ${open.length - overdue}` },
+    ],
+    "Overdue versus on-time open requests"
+  );
+  setPill("kpiOverduePill", `${pct(overdue, open.length).toFixed(0)}% of open`, overdue > 0 ? "bad" : "good");
+}
+
 function renderKPIs(requests) {
   const kpis = computeKPIs(requests);
-  const set = (id, value) => {
-    const el = byId(id);
-    if (el) el.textContent = String(value);
-  };
-  set("kpiOpen", kpis.openRequests);
-  set("kpiAvgApproval", kpis.avgDaysToApproval);
-  set("kpiApprovalRate", kpis.approvalRate);
-  set("kpiOverdue", kpis.overdueRequests);
-  set("kpiRecordCount", `${requests.length} of ${state.requests.length} requests`);
+  animateKPI("kpiOpen", kpis.openRequests);
+  animateKPI("kpiAvgApproval", kpis.avgDaysToApproval);
+  animateKPI("kpiApprovalRate", kpis.approvalRate);
+  animateKPI("kpiOverdue", kpis.overdueRequests);
+  setText("kpiRecordCount", `${requests.length} of ${state.requests.length} requests`);
+  renderKPIMicroVisuals(requests);
 }
 
 /* --------------------------------------------------------------------------
@@ -1392,15 +1501,15 @@ function historyButton(id) {
 }
 
 function renderStaffPanel() {
-  const mine = state.requests.filter((r) => r.requesterId === state.staffIdentity);
-  setText("staffPanelSub", `Requests raised by ${state.staffIdentity} · personal view, not affected by filters`);
+  const mine = state.requests.filter((r) => r.requesterId === STAFF_IDENTITY);
+  setText("staffPanelSub", `Requests raised by ${STAFF_IDENTITY} · personal view, not affected by filters`);
   setText("myOpen", mine.filter(isOpen).length);
   setText("myOverdue", mine.filter(isOverdue).length);
   setText("myClosed", mine.filter((r) => r.status === "Completed" || r.status === "Rejected").length);
   const tbody = byId("staffPanelBody");
   if (!tbody) return;
   if (mine.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty">No requests yet for ${escapeHTML(state.staffIdentity)}. Use “Submit a request”.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">No requests yet for ${escapeHTML(STAFF_IDENTITY)}. Use “Submit a request”.</td></tr>`;
     return;
   }
   tbody.innerHTML = mine
@@ -1516,7 +1625,7 @@ function filteredQueue() {
   const scope = effectiveScope();
   const term = state.queueSearch.trim().toLowerCase();
   const rows = state.requests.filter((r) => {
-    if (scope === "mine" && r.requesterId !== state.staffIdentity) return false;
+    if (scope === "mine" && r.requesterId !== STAFF_IDENTITY) return false;
     if (scope === "action" && !isOpen(r)) return false;
     if (state.queueStatus && r.status !== state.queueStatus) return false;
     if (!term) return true;
@@ -1541,12 +1650,12 @@ function renderWorkflowTable() {
   const tbody = byId("workflowTableBody");
   if (!tbody) return;
   const rows = filteredQueue();
-  const scopeLabel = { mine: `raised by ${state.staffIdentity}`, action: "needing action, oldest first", all: "" }[scope];
+  const scopeLabel = { mine: `raised by ${STAFF_IDENTITY}`, action: "needing action, oldest first", all: "" }[scope];
   setText("queueCount", `Showing ${rows.length} of ${state.requests.length} requests ${scopeLabel}`.trim());
   if (rows.length === 0) {
     const message =
       scope === "mine" && !state.queueSearch && !state.queueStatus
-        ? `No requests yet for ${state.staffIdentity}. Submit one with the form.`
+        ? `No requests yet for ${STAFF_IDENTITY}. Submit one with the form.`
         : "No requests match the current view.";
     tbody.innerHTML = `<tr><td colspan="8" class="empty">${escapeHTML(message)}</td></tr>`;
     return;
@@ -1806,7 +1915,13 @@ function switchTab(tab) {
   });
   TABS.forEach((name) => {
     const panel = byId(`section-${name}`);
-    if (panel) panel.hidden = name !== tab;
+    if (!panel) return;
+    panel.hidden = name !== tab;
+    panel.classList.remove("tab-panel-enter");
+    if (name === tab) {
+      void panel.offsetWidth; // restart the 240ms enter animation on every switch
+      panel.classList.add("tab-panel-enter");
+    }
   });
   if (window.location.hash !== `#${tab}`) {
     try {
@@ -1945,8 +2060,8 @@ function init() {
   const roleSwitcher = byId("roleSwitcher");
   if (roleSwitcher) roleSwitcher.addEventListener("change", (e) => setRole(e.target.value));
 
-  const staffIdentity = byId("staffIdentity");
-  if (staffIdentity) staffIdentity.addEventListener("change", (e) => setStaffIdentity(e.target.value));
+  const onBehalfOf = byId("onBehalfOf");
+  if (onBehalfOf) onBehalfOf.addEventListener("change", (e) => setOnBehalfOf(e.target.value));
 
   const queueSearch = byId("queueSearch");
   if (queueSearch) {

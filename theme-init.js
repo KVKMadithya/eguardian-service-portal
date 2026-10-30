@@ -20,4 +20,8 @@
     theme = prefersDark ? "dark" : "light";
   }
   document.documentElement.classList.toggle("dark", theme === "dark");
+
+  // Match the mobile browser chrome to the canvas colour (kept in sync by applyTheme() in app.js).
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.setAttribute("content", theme === "dark" ? "#090b10" : "#f8fafc");
 })();
