@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="description" content="eGuardian Enterprise Service Request Portal with a DevSecOps CI/CD pipeline.">
+  <title>eGuardian Service Portal</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    [hidden] { display: none !important; }
+    html { color-scheme: dark; }
+    body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; background: #020617; color: #e2e8f0; }
+    code, pre, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-title { font-size: 0.95rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.75rem; }
+    .section-heading { font-size: 1.35rem; font-weight: 700; color: #f8fafc; }
+    .section-sub { color: #94a3b8; font-size: 0.9rem; margin-top: 0.25rem; }
+    .muted { color: #94a3b8; font-size: 0.85rem; }
+
+    .tab-btn { white-space: nowrap; padding: 0.55rem 0.9rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 500; color: #94a3b8; transition: background 0.15s, color 0.15s; }
+    .tab-btn:hover { color: #e2e8f0; background: #1e293b; }
+    .tab-btn.active { color: #022c22; background: #34d399; }
+
+    .field-label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; margin-bottom: 0.3rem; }
+    .field { width: 100%; background: #020617; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.5rem 0.65rem; font-size: 0.875rem; color: #e2e8f0; }
+    .field:focus { outline: 2px solid #34d399; outline-offset: 1px; border-color: transparent; }
+    .field:disabled { opacity: 0.5; cursor: not-allowed; }
+    .field.is-invalid { border-color: #f87171; }
+    .field-error { min-height: 1rem; font-size: 0.75rem; color: #f87171; margin-top: 0.25rem; }
+
+    .btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.9rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 600; background: #1e293b; color: #e2e8f0; border: 1px solid #334155; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+    .btn:hover { background: #273449; border-color: #475569; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #10b981; border-color: #10b981; color: #022c22; }
+    .btn-primary:hover { background: #34d399; border-color: #34d399; }
+    .btn-danger { background: transparent; border-color: #7f1d1d; color: #fca5a5; }
+    .btn-danger:hover { background: #450a0a; }
+    .btn-ghost { background: transparent; }
+    .btn-sm { padding: 0.25rem 0.55rem; font-size: 0.75rem; }
+    .btn-to-under-review { border-color: #b45309; color: #fcd34d; }
+    .btn-to-approved { border-color: #1d4ed8; color: #93c5fd; }
+    .btn-to-rejected { border-color: #b91c1c; color: #fca5a5; }
+    .btn-to-completed { border-color: #047857; color: #6ee7b7; }
+
+    .pill { padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; border: 1px solid #334155; color: #94a3b8; background: transparent; cursor: pointer; }
+    .pill:hover { color: #e2e8f0; }
+    .pill.active { background: #e2e8f0; color: #0f172a; border-color: #e2e8f0; }
+
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
+    .badge-submitted { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; border-color: #475569; }
+    .badge-under-review { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border-color: #92400e; }
+    .badge-approved { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: #1e40af; }
+    .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: #991b1b; }
+    .badge-completed { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: #065f46; }
+    .badge-low { color: #94a3b8; border-color: #334155; }
+    .badge-medium { color: #7dd3fc; border-color: #075985; }
+    .badge-high { color: #fdba74; border-color: #9a3412; }
+    .badge-critical { color: #fecaca; background: rgba(220, 38, 38, 0.3); border-color: #dc2626; }
+    .badge-overdue { color: #fecaca; background: #7f1d1d; }
+    .badge-role { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+    .badge-role-manager { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: #1e40af; }
+    .badge-role-leadership { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border-color: #6b21a8; }
+    .badge-pass { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: #065f46; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .data-table th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600; padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; white-space: nowrap; }
+    .data-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; vertical-align: top; }
+    .data-table tbody tr:hover { background: rgba(30, 41, 59, 0.5); }
+    .data-table code { color: #6ee7b7; font-size: 0.78rem; }
+    .row-overdue td:first-child { box-shadow: inset 3px 0 0 #ef4444; }
+    .actions-cell { white-space: nowrap; }
+    .actions-cell .btn { margin: 0 0.15rem 0.2rem 0; }
+    td.empty { text-align: center; color: #64748b; padding: 2rem; }
+
+    .kpi-value { font-size: 2rem; font-weight: 700; color: #f8fafc; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .kpi-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; }
+    .chart-box { position: relative; height: 260px; }
+
+    .code-block { background: #020617; border: 1px solid #1e293b; border-radius: 0.5rem; padding: 0.9rem 1rem; font-size: 0.78rem; line-height: 1.55; color: #cbd5e1; overflow-x: auto; white-space: pre; }
+    .code-before { border-left: 3px solid #ef4444; }
+    .code-after { border-left: 3px solid #10b981; }
+
+    .fsm-node { padding: 0.45rem 0.9rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600; border: 1px solid; }
+    .fsm-arrow { color: #475569; font-weight: 700; }
+
+    .timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid #1e293b; }
+    .timeline-item { position: relative; padding: 0 0 1rem 1.1rem; }
+    .timeline-item::before { content: ""; position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #34d399; }
+    .timeline-item time { font-size: 0.75rem; color: #94a3b8; margin-left: 0.4rem; font-family: "JetBrains Mono", monospace; }
+    .timeline-actor { font-size: 0.75rem; color: #cbd5e1; margin-left: 0.4rem; font-weight: 600; }
+    .timeline-note { font-size: 0.82rem; color: #cbd5e1; margin-top: 0.25rem; }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(2, 6, 23, 0.8); display: flex; align-items: flex-start; justify-content: center; padding: 4vh 1rem; overflow-y: auto; }
+    .modal-panel { width: 100%; max-width: 40rem; background: #0f172a; border: 1px solid #334155; border-radius: 0.9rem; padding: 1.5rem; }
+
+    .toast-container { position: fixed; right: 1rem; bottom: 1rem; z-index: 60; display: flex; flex-direction: column; gap: 0.5rem; max-width: calc(100vw - 2rem); }
+    .toast { padding: 0.7rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 500; background: #1e293b; color: #f1f5f9; border-left: 4px solid #64748b; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+    .toast-success { border-left-color: #10b981; }
+    .toast-error { border-left-color: #ef4444; }
+    .toast-warning { border-left-color: #f59e0b; }
+    .toast-info { border-left-color: #3b82f6; }
+
+    .gwt dt { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #34d399; margin-top: 0.4rem; }
+    .gwt dd { font-size: 0.85rem; color: #cbd5e1; margin: 0; }
+
+    a.link-card { display: block; transition: border-color 0.15s, transform 0.15s; }
+    a.link-card:hover { border-color: #34d399; transform: translateY(-1px); }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- ===================== GLOBAL HEADER ===================== -->
+  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
+    <div class="mx-auto max-w-7xl px-4 py-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <h1 class="mono text-base font-semibold tracking-tight text-slate-100 sm:text-lg">
+            <span class="text-emerald-400">@EGUARDIAN</span> <span class="text-slate-500">//</span> Service Request Portal
+          </h1>
+          <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions"
+             class="inline-flex items-center gap-1.5 rounded-full border border-emerald-700 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
+            <span class="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true"></span>
+            CI/CD Pipeline: Passing
+          </a>
+        </div>
+        <div class="flex items-center gap-2">
+          <label for="roleSwitcher" class="text-xs font-semibold uppercase tracking-wide text-slate-400">Role</label>
+          <select id="roleSwitcher" class="field w-auto py-1.5 text-sm" aria-label="Switch active role">
+            <option value="Staff">Staff View</option>
+            <option value="Manager">Manager View</option>
+            <option value="Leadership">Leadership View</option>
+          </select>
+          <span id="roleBadge" class="badge badge-role">Staff</span>
+        </div>
+      </div>
+      <nav class="-mx-1 mt-3 flex gap-1 overflow-x-auto pb-1" role="tablist" aria-label="Portal sections">
+        <button type="button" class="tab-btn active" role="tab" data-tab="dashboard" aria-selected="true">Dashboard</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="workflow" aria-selected="false">Workflow</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="dataset" aria-selected="false">Sample Dataset</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="requirements" aria-selected="false">Requirements</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="security" aria-selected="false">Security &amp; Pipeline</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="ai-log" aria-selected="false">AI Review Log &amp; Handover</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-4 py-6">
+
+    <!-- ===================== AREA 1 — DASHBOARD ===================== -->
+    <section id="section-dashboard" role="tabpanel" aria-label="Dashboard" class="space-y-6">
+      <div>
+        <h2 class="section-heading">Executive Dashboard</h2>
+        <p class="section-sub">Live KPIs and charts computed from the current request dataset. Filters apply to every KPI and chart. <span id="kpiRecordCount" class="mono text-emerald-400"></span></p>
+      </div>
+
+      <div class="card">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+          <div>
+            <label for="filterDepartment" class="field-label">Department</label>
+            <select id="filterDepartment" class="field"></select>
+          </div>
+          <div>
+            <label for="filterStatus" class="field-label">Status</label>
+            <select id="filterStatus" class="field"></select>
+          </div>
+          <div>
+            <label for="filterPriority" class="field-label">Priority</label>
+            <select id="filterPriority" class="field"></select>
+          </div>
+          <div>
+            <label for="filterFrom" class="field-label">Date From</label>
+            <input id="filterFrom" type="date" class="field" min="2026-01-01" max="2026-12-31">
+          </div>
+          <div>
+            <label for="filterTo" class="field-label">Date To</label>
+            <input id="filterTo" type="date" class="field" min="2026-01-01" max="2026-12-31">
+          </div>
+          <div class="flex items-end">
+            <button type="button" class="btn w-full justify-center" data-action="reset-filters">Reset Filters</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="card">
+          <p class="kpi-label">Open Requests</p>
+          <p id="kpiOpen" class="kpi-value mt-2">0</p>
+          <p class="muted mt-1">Submitted, Under Review or Approved</p>
+        </div>
+        <div class="card">
+          <p class="kpi-label">Avg Days to Approval</p>
+          <p id="kpiAvgApproval" class="kpi-value mt-2">0.0</p>
+          <p class="muted mt-1">createdAt → approvedAt, Approved + Completed</p>
+        </div>
+        <div class="card">
+          <p class="kpi-label">Approval Rate (%)</p>
+          <p id="kpiApprovalRate" class="kpi-value mt-2">0.0%</p>
+          <p class="muted mt-1">(Approved + Completed) ÷ decided</p>
+        </div>
+        <div class="card border-red-900/60">
+          <p class="kpi-label">Overdue Requests (&gt;<span id="slaThreshold">7</span> Days SLA)</p>
+          <p id="kpiOverdue" class="kpi-value mt-2 text-red-300">0</p>
+          <p class="muted mt-1">Open requests older than the SLA threshold</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="card">
+          <h3 class="card-title">Requests by Department</h3>
+          <div class="chart-box"><canvas id="deptChart" aria-label="Bar chart of requests by department" role="img"></canvas></div>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Request Volume Over Time</h3>
+          <div class="chart-box"><canvas id="trendChart" aria-label="Line chart of weekly request volume" role="img"></canvas></div>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Workflow Status Breakdown</h3>
+          <div class="chart-box"><canvas id="statusChart" aria-label="Doughnut chart of request statuses" role="img"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Production SQL — KPI Queries</h3>
+        <p class="muted mb-4">PostgreSQL queries against the relational <code class="text-emerald-300">requests</code> table that reproduce each dashboard KPI. The demo pins "today" to 2026-10-30; production uses <code class="text-emerald-300">CURRENT_DATE</code>.</p>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div>
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-sm font-semibold text-slate-200">1. Open Requests</span>
+              <button type="button" class="btn btn-sm" data-action="copy-sql" data-target="sqlOpen">Copy</button>
+            </div>
+<pre id="sqlOpen" class="code-block">SELECT COUNT(*) AS open_requests
+FROM requests
+WHERE status IN ('Submitted', 'Under Review', 'Approved');</pre>
+          </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-sm font-semibold text-slate-200">2. Avg Days to Approval</span>
+              <button type="button" class="btn btn-sm" data-action="copy-sql" data-target="sqlAvgApproval">Copy</button>
+            </div>
+<pre id="sqlAvgApproval" class="code-block">SELECT ROUND(
+         COALESCE(AVG(approved_at - created_at), 0)::numeric, 1
+       ) AS avg_days_to_approval
+FROM requests
+WHERE status IN ('Approved', 'Completed')
+  AND approved_at IS NOT NULL;</pre>
+          </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-sm font-semibold text-slate-200">3. Approval Rate (%)</span>
+              <button type="button" class="btn btn-sm" data-action="copy-sql" data-target="sqlApprovalRate">Copy</button>
+            </div>
+<pre id="sqlApprovalRate" class="code-block">SELECT ROUND(
+         COALESCE(
+           100.0 * COUNT(*) FILTER (WHERE status IN ('Approved', 'Completed'))
+           / NULLIF(COUNT(*) FILTER (WHERE status IN ('Approved', 'Completed', 'Rejected')), 0),
+           0
+         ), 1
+       ) AS approval_rate_pct
+FROM requests;</pre>
+          </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-sm font-semibold text-slate-200">4. Overdue Requests (&gt;7 Days SLA)</span>
+              <button type="button" class="btn btn-sm" data-action="copy-sql" data-target="sqlOverdue">Copy</button>
+            </div>
+<pre id="sqlOverdue" class="code-block">SELECT COUNT(*) AS overdue_requests
+FROM requests
+WHERE status IN ('Submitted', 'Under Review', 'Approved')
+  AND created_at &lt; CURRENT_DATE - INTERVAL '7 days';</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== AREA 2 — WORKFLOW ===================== -->
+    <section id="section-workflow" role="tabpanel" aria-label="Workflow" class="space-y-6" hidden>
+      <div>
+        <h2 class="section-heading">Request Workflow</h2>
+        <p class="section-sub">Submit new requests and move them through the enforced approval state machine.</p>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Enforced State Machine (<code class="text-emerald-300">VALID_TRANSITIONS</code>)</h3>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="fsm-node border-slate-600 bg-slate-500/10 text-slate-200">Submitted</span>
+          <span class="fsm-arrow" aria-hidden="true">➔</span>
+          <span class="fsm-node border-amber-700 bg-amber-500/10 text-amber-300">Under Review</span>
+          <span class="fsm-arrow" aria-hidden="true">➔</span>
+          <span class="flex flex-col gap-1.5">
+            <span class="flex items-center gap-2">
+              <span class="fsm-node border-blue-800 bg-blue-500/10 text-blue-300">Approved</span>
+              <span class="fsm-arrow" aria-hidden="true">➔</span>
+              <span class="fsm-node border-emerald-800 bg-emerald-500/10 text-emerald-300">Completed</span>
+              <span class="text-xs text-slate-500">terminal</span>
+            </span>
+            <span class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-500">OR</span>
+              <span class="fsm-node border-red-800 bg-red-500/10 text-red-300">Rejected</span>
+              <span class="text-xs text-slate-500">terminal</span>
+            </span>
+          </span>
+        </div>
+        <p class="muted mt-3">Any transition not listed is blocked client-side. Only the Manager role can move requests; approving stamps <code class="text-emerald-300">approvedAt</code> and every move appends to <code class="text-emerald-300">statusHistory</code>.</p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div class="card xl:col-span-1">
+          <h3 class="card-title">Submit New Request</h3>
+          <p id="formRoleNotice" class="mb-3 text-sm text-amber-300"></p>
+          <form id="requestForm" novalidate class="space-y-2">
+            <div>
+              <label for="title" class="field-label">Title</label>
+              <input id="title" name="title" type="text" class="field" maxlength="100" autocomplete="off" placeholder="e.g. VPN access for audit team" aria-describedby="err-title">
+              <p id="err-title" class="field-error" role="alert"></p>
+            </div>
+            <div>
+              <label for="requesterId" class="field-label">Requester Employee ID</label>
+              <input id="requesterId" name="requesterId" type="text" class="field mono" maxlength="9" autocomplete="off" placeholder="EMP-xxx" aria-describedby="err-requesterId">
+              <p id="err-requesterId" class="field-error" role="alert"></p>
+            </div>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              <div>
+                <label for="department" class="field-label">Department</label>
+                <select id="department" name="department" class="field" aria-describedby="err-department"></select>
+                <p id="err-department" class="field-error" role="alert"></p>
+              </div>
+              <div>
+                <label for="priority" class="field-label">Priority</label>
+                <select id="priority" name="priority" class="field" aria-describedby="err-priority"></select>
+                <p id="err-priority" class="field-error" role="alert"></p>
+              </div>
+            </div>
+            <div>
+              <label for="type" class="field-label">Request Type</label>
+              <select id="type" name="type" class="field" aria-describedby="err-type"></select>
+              <p id="err-type" class="field-error" role="alert"></p>
+            </div>
+            <div>
+              <label for="description" class="field-label">Description</label>
+              <textarea id="description" name="description" rows="4" class="field" maxlength="500" placeholder="Business justification (15–500 characters)" aria-describedby="err-description"></textarea>
+              <p id="err-description" class="field-error" role="alert"></p>
+            </div>
+            <button type="submit" class="btn btn-primary w-full justify-center">Submit Request</button>
+          </form>
+        </div>
+
+        <div class="card xl:col-span-2">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="card-title mb-0">Request Queue</h3>
+              <p id="queueCount" class="muted"></p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input id="queueSearch" type="search" class="field w-56" placeholder="Search ID, title, EMP, dept…" aria-label="Search request queue" maxlength="100">
+              <button type="button" class="btn btn-danger" data-action="reset-demo">Reset Demo Data</button>
+            </div>
+          </div>
+          <div class="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter queue by status">
+            <button type="button" class="pill active" data-action="queue-status" data-status="">All</button>
+            <button type="button" class="pill" data-action="queue-status" data-status="Submitted">Submitted</button>
+            <button type="button" class="pill" data-action="queue-status" data-status="Under Review">Under Review</button>
+            <button type="button" class="pill" data-action="queue-status" data-status="Approved">Approved</button>
+            <button type="button" class="pill" data-action="queue-status" data-status="Rejected">Rejected</button>
+            <button type="button" class="pill" data-action="queue-status" data-status="Completed">Completed</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Title</th>
+                  <th scope="col">Requester</th>
+                  <th scope="col">Dept</th>
+                  <th scope="col">Priority</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Created</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="workflowTableBody"></tbody>
+            </table>
+          </div>
+          <p class="muted mt-3">Rows with a red edge are open past the 7-day SLA. Transition buttons appear only in Manager View.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== AREA 3 — SAMPLE DATASET ===================== -->
+    <section id="section-dataset" role="tabpanel" aria-label="Sample Dataset" class="space-y-6" hidden>
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 class="section-heading">Sample Dataset</h2>
+          <p class="section-sub">Synthetic, fully anonymized service requests. <span id="datasetCount" class="mono text-emerald-400"></span></p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="btn btn-primary" data-action="export-csv">Download CSV</button>
+          <button type="button" class="btn" data-action="export-json">Download JSON</button>
+          <button type="button" class="btn" data-action="copy-sql">Copy SQL INSERT Script</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="card lg:col-span-1">
+          <h3 class="card-title">Data Generation Methodology</h3>
+          <ul class="list-disc space-y-2 pl-5 text-sm text-slate-300">
+            <li><strong class="text-slate-100">36 records</strong> (<code class="text-emerald-300">REQ-1001</code>–<code class="text-emerald-300">REQ-1036</code>) created between 1 Sep and 28 Oct 2026, roughly 3–4 per week, so the trend chart has a realistic shape.</li>
+            <li>Every department, request type, priority and status is represented, so all filters and chart segments have data.</li>
+            <li>Each <code class="text-emerald-300">statusHistory</code> was generated by walking the same state machine the app enforces: Submitted → Under Review (next day) → Approved/Rejected → Completed (two days after approval).</li>
+            <li>12 open requests are deliberately older than 7 days so the Overdue KPI is populated.</li>
+            <li><strong class="text-slate-100">Zero real PII:</strong> requesters are sequential placeholders <code class="text-emerald-300">EMP-101</code>–<code class="text-emerald-300">EMP-136</code>; approvers are recorded by role ("Manager"), never by name. Titles and descriptions are generic business scenarios.</li>
+            <li>Data lives in the browser's <code class="text-emerald-300">localStorage</code> (<code class="text-emerald-300">eguardian_requests_v1</code>); <em>Reset Demo Data</em> restores the original 36 records.</li>
+          </ul>
+        </div>
+
+        <div class="card lg:col-span-2">
+          <h3 class="card-title">Data Dictionary</h3>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Validation Rule</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>id</code></td><td>string</td><td>Unique request identifier</td><td>System-generated, <code>REQ-</code> + sequential number; immutable</td></tr>
+                <tr><td><code>title</code></td><td>string</td><td>Short summary of the request</td><td>Required, 5–100 characters, trimmed</td></tr>
+                <tr><td><code>requesterId</code></td><td>string</td><td>Anonymized employee ID of the requester</td><td>Required, matches <code>/^EMP-\d{3,5}$/</code></td></tr>
+                <tr><td><code>department</code></td><td>enum</td><td>Owning department</td><td>Allowlist: IT, Facilities, HR, Finance, Operations, Security</td></tr>
+                <tr><td><code>type</code></td><td>enum</td><td>Request category</td><td>Allowlist: IT Access, Hardware &amp; Equipment, Facilities &amp; Maintenance, Software License, Cloud Infrastructure</td></tr>
+                <tr><td><code>priority</code></td><td>enum</td><td>Business urgency</td><td>Allowlist: Low, Medium, High, Critical</td></tr>
+                <tr><td><code>status</code></td><td>enum</td><td>Current workflow state</td><td>One of 5 statuses; changes only via <code>VALID_TRANSITIONS</code>; new requests always start as Submitted</td></tr>
+                <tr><td><code>createdAt</code></td><td>date</td><td>Submission date</td><td>ISO 8601 <code>YYYY-MM-DD</code>; set by the system</td></tr>
+                <tr><td><code>approvedAt</code></td><td>date | null</td><td>Approval date, used for Avg Days to Approval</td><td>ISO <code>YYYY-MM-DD</code> set on transition to Approved; otherwise <code>null</code></td></tr>
+                <tr><td><code>description</code></td><td>string</td><td>Business justification</td><td>Required, 15–500 characters, trimmed</td></tr>
+                <tr><td><code>statusHistory</code></td><td>array</td><td>Audit trail of <code>{ status, timestamp, actor, note }</code></td><td>Append-only; first entry is Submitted; each entry follows a valid transition</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Dataset Preview</h3>
+        <div class="max-h-[32rem] overflow-auto">
+          <table class="data-table">
+            <thead class="sticky top-0 bg-slate-900">
+              <tr>
+                <th scope="col">ID</th><th scope="col">Title</th><th scope="col">Requester</th><th scope="col">Department</th>
+                <th scope="col">Type</th><th scope="col">Priority</th><th scope="col">Status</th><th scope="col">Created</th>
+                <th scope="col">Approved</th><th scope="col">History</th>
+              </tr>
+            </thead>
+            <tbody id="datasetTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== AREA 4 — REQUIREMENTS ===================== -->
+    <section id="section-requirements" role="tabpanel" aria-label="Requirements" class="space-y-6" hidden>
+      <div>
+        <h2 class="section-heading">Requirements</h2>
+        <p class="section-sub">Problem, users, user stories, briefing outcomes, assumptions and data model.</p>
+      </div>
+
+      <div class="card border-emerald-900/60">
+        <h3 class="card-title">Problem Statement</h3>
+        <p class="text-sm leading-relaxed text-slate-300">
+          eGuardian's internal service requests — access grants, equipment, maintenance, licenses and cloud resources — are currently raised by email and tracked in departmental spreadsheets.
+          Requests get lost between inboxes, there is no consistent approval path or audit trail, requesters cannot see where their request stands, and leadership has no reliable view of backlog, approval speed or SLA breaches.
+          This portal replaces that fragmented process with <strong class="text-slate-100">one centralized request workflow</strong> that enforces a fixed approval lifecycle, records who changed what and when, and feeds an <strong class="text-slate-100">executive dashboard</strong> of live KPIs.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Target Users</h3>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div class="card">
+            <span class="badge badge-role">Staff</span>
+            <p class="mt-3 text-sm text-slate-300">Employees in any department who raise requests. They need a quick validated form and visibility of each request's status and history.</p>
+          </div>
+          <div class="card">
+            <span class="badge badge-role badge-role-manager">Managers</span>
+            <p class="mt-3 text-sm text-slate-300">Approvers who triage the queue, review, approve or reject with a note, and confirm completion — within a controlled, auditable lifecycle.</p>
+          </div>
+          <div class="card">
+            <span class="badge badge-role badge-role-leadership">Leadership</span>
+            <p class="mt-3 text-sm text-slate-300">Executives who need read-only, filterable KPIs on backlog, approval speed, approval rate and SLA breaches across departments.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">User Stories &amp; Acceptance Criteria</h3>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <article class="card">
+            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-01</code> Submit a request</h4>
+            <p class="muted mt-1">As a staff member, I want to submit a service request through one form so that it is tracked centrally instead of by email.</p>
+            <dl class="gwt mt-2">
+              <dt>Given</dt><dd>I am in Staff View on the Workflow tab</dd>
+              <dt>When</dt><dd>I submit a form with a valid title, Employee ID, department, type, priority and description</dd>
+              <dt>Then</dt><dd>a new <code>REQ-</code> ID is created in <em>Submitted</em> status, appears at the top of the queue, and the dashboard KPIs update immediately</dd>
+            </dl>
+          </article>
+          <article class="card">
+            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-02</code> Get clear validation feedback</h4>
+            <p class="muted mt-1">As a staff member, I want to see what is wrong with my input so that I can correct it before submitting.</p>
+            <dl class="gwt mt-2">
+              <dt>Given</dt><dd>I enter an Employee ID that does not match <code>EMP-xxx</code> or a description under 15 characters</dd>
+              <dt>When</dt><dd>I press Submit Request</dd>
+              <dt>Then</dt><dd>an inline error appears under each invalid field and no record is created</dd>
+            </dl>
+          </article>
+          <article class="card">
+            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-03</code> Triage incoming requests</h4>
+            <p class="muted mt-1">As a manager, I want to move new requests into review so that requesters know they are being handled.</p>
+            <dl class="gwt mt-2">
+              <dt>Given</dt><dd>I am in Manager View and a request is <em>Submitted</em></dd>
+              <dt>When</dt><dd>I click <em>Move to Review</em></dd>
+              <dt>Then</dt><dd>its status becomes <em>Under Review</em> and a history entry records the new status, timestamp and actor "Manager"</dd>
+            </dl>
+          </article>
+          <article class="card">
+            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-04</code> Approve or reject with a note</h4>
+            <p class="muted mt-1">As a manager, I want to approve or reject with a reason so that decisions are documented.</p>
+            <dl class="gwt mt-2">
+              <dt>Given</dt><dd>a request is <em>Under Review</em> and I have opened its History modal</dd>
+              <dt>When</dt><dd>I enter a manager note and click <em>Approve</em> (or <em>Reject</em>)</dd>
+              <dt>Then</dt><dd>the status updates, <code>approvedAt</code> is set to today on approval, and my note is saved in the status history</dd>
+            </dl>
+          </article>
+          <article class="card">
+            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-05</code> Prevent invalid status changes</h4>
+            <p class="muted mt-1">As a process owner, I want the lifecycle enforced so that requests cannot skip review or be reopened.</p>
+            <dl class="gwt mt-2">
+              <dt>Given</dt><dd>a request is <em>Submitted</em>, <em>Rejected</em> or <em>Completed</em></dd>
+              <dt>When</dt><dd>anyone attempts a transition not listed in <code>VALID_TRANSITIONS</code> (e.g. Submitted → Approved)</dd>
+              <dt>Then</dt><dd>the change is blocked, an error toast is shown, and the record is unchanged</dd>
+            </dl>
+          </article>
+          <article class="card">
+            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-06</code> Filter executive KPIs</h4>
+            <p class="muted mt-1">As a leader, I want to slice KPIs by department, status, priority and date so that I can spot bottlenecks.</p>
+            <dl class="gwt mt-2">
+              <dt>Given</dt><dd>I am in Leadership View on the Dashboard</dd>
+              <dt>When</dt><dd>I set Department = Security and a date range</dd>
+              <dt>Then</dt><dd>all 4 KPIs and 3 charts recalculate on matching records only, and an empty result shows <code>0.0</code> / <code>0.0%</code> rather than <code>NaN</code></dd>
+            </dl>
+          </article>
+          <article class="card lg:col-span-2">
+            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-07</code> Audit trail and data export</h4>
+            <p class="muted mt-1">As an auditor or leader, I want to see each request's full history and export the dataset so that decisions can be reviewed offline.</p>
+            <dl class="gwt mt-2">
+              <dt>Given</dt><dd>any role is active</dd>
+              <dt>When</dt><dd>I click <em>History</em> on a request, or <em>Download CSV</em> / <em>Download JSON</em> on the Sample Dataset tab</dd>
+              <dt>Then</dt><dd>the history is shown in chronological order with actor and note, and the file downloads with quotes escaped and spreadsheet formulas neutralised</dd>
+            </dl>
+          </article>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Live Briefing — Questions &amp; Answers</h3>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead><tr><th scope="col">#</th><th scope="col">Question Asked</th><th scope="col">Operational Answer</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Who is allowed to approve or reject requests?</td><td>Managers only. Staff submit and track; Leadership has read-only dashboard access.</td></tr>
+              <tr><td>2</td><td>When is a request considered overdue?</td><td>When it is still open (Submitted, Under Review or Approved) more than 7 calendar days after <code>createdAt</code>.</td></tr>
+              <tr><td>3</td><td>Can a rejected or completed request be reopened?</td><td>No. Rejected and Completed are terminal; the requester raises a new request with updated justification.</td></tr>
+              <tr><td>4</td><td>What employee data may the prototype store?</td><td>No real personal data. Use anonymized <code>EMP-xxx</code> identifiers and synthetic request content only.</td></tr>
+              <tr><td>5</td><td>How should "time to approval" be measured?</td><td>Calendar days from <code>createdAt</code> to <code>approvedAt</code>, averaged across Approved and Completed requests.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="card">
+          <h3 class="card-title">Recorded Assumptions</h3>
+          <ul class="list-disc space-y-2 pl-5 text-sm text-slate-300">
+            <li><strong class="text-slate-100">Static browser storage:</strong> the prototype is a static GitHub Pages site; data persists per browser in <code>localStorage</code> with no backend. A production build would move to the relational schema below.</li>
+            <li><strong class="text-slate-100">Synthetic identities:</strong> all requesters use anonymized <code>EMP-xxx</code> IDs; no names, emails or real employee data are stored.</li>
+            <li><strong class="text-slate-100">7-day overdue SLA:</strong> a single global threshold (<code>PORTAL_CONFIG.slaThresholdDays</code>) applies to all priorities.</li>
+            <li><strong class="text-slate-100">Strict state machine:</strong> statuses change only through <code>VALID_TRANSITIONS</code>; there is no admin override.</li>
+            <li><strong class="text-slate-100">Fail-closed CI/CD:</strong> if secret scanning, linting or the dependency audit fails, the deploy job does not run.</li>
+            <li>Role switching is a demo convenience, not authentication; production would map roles from SSO.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Entity-Relationship Schema</h3>
+          <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+            <div class="flex-1 rounded-lg border border-emerald-800 bg-slate-950">
+              <div class="rounded-t-lg border-b border-emerald-800 bg-emerald-500/10 px-3 py-2 mono text-sm font-semibold text-emerald-300">REQUESTS</div>
+              <ul class="mono space-y-0.5 px-3 py-2 text-xs text-slate-300">
+                <li><span class="text-amber-300">PK</span> id</li>
+                <li>title</li>
+                <li>requester_id</li>
+                <li>department</li>
+                <li>type</li>
+                <li>priority</li>
+                <li>status</li>
+                <li>created_at</li>
+                <li>approved_at</li>
+                <li>description</li>
+              </ul>
+            </div>
+            <div class="mono text-center text-sm font-semibold text-slate-400" aria-label="one to many">(1) ─── (N)</div>
+            <div class="flex-1 rounded-lg border border-blue-800 bg-slate-950">
+              <div class="rounded-t-lg border-b border-blue-800 bg-blue-500/10 px-3 py-2 mono text-sm font-semibold text-blue-300">STATUS_HISTORY</div>
+              <ul class="mono space-y-0.5 px-3 py-2 text-xs text-slate-300">
+                <li><span class="text-amber-300">PK</span> history_id</li>
+                <li><span class="text-sky-300">FK</span> request_id → requests.id</li>
+                <li>status</li>
+                <li>timestamp</li>
+                <li>actor</li>
+                <li>note</li>
+              </ul>
+            </div>
+          </div>
+          <p class="muted mt-3">One request has many history entries. In the browser prototype, history is embedded as the <code>statusHistory</code> array on each request.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== AREA 5 — SECURITY & PIPELINE ===================== -->
+    <section id="section-security" role="tabpanel" aria-label="Security and Pipeline" class="space-y-6" hidden>
+      <div>
+        <h2 class="section-heading">Security &amp; Pipeline</h2>
+        <p class="section-sub">Every push to <code class="text-emerald-300">main</code> must pass three security gates before it deploys to GitHub Pages.</p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <a data-link="repo" href="https://github.com/KVKMadithya/eguardian-service-portal" class="card link-card">
+          <p class="kpi-label">Source Repository</p>
+          <p class="mt-2 font-semibold text-slate-100">KVKMadithya/eguardian-service-portal ↗</p>
+          <p class="muted mt-1 break-all">https://github.com/KVKMadithya/eguardian-service-portal</p>
+        </a>
+        <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions" class="card link-card">
+          <p class="kpi-label">Live CI/CD Pipeline</p>
+          <p class="mt-2 font-semibold text-slate-100">GitHub Actions — DevSecOps Pipeline ↗</p>
+          <p class="muted mt-1 break-all">https://github.com/KVKMadithya/eguardian-service-portal/actions</p>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="card">
+          <div class="flex items-center justify-between">
+            <p class="kpi-label">Gate 1 · Secret Detection</p>
+            <span class="badge badge-pass">PASSED</span>
+          </div>
+          <p class="mono mt-3 text-sm text-emerald-300">gitleaks/gitleaks-action@v2</p>
+          <p class="muted mt-2">Scans the full git history (<code>fetch-depth: 0</code>) for API keys, tokens and credentials. Last run: no leaks found.</p>
+        </div>
+        <div class="card">
+          <div class="flex items-center justify-between">
+            <p class="kpi-label">Gate 2 · SAST &amp; Security Linting</p>
+            <span class="badge badge-pass">PASSED</span>
+          </div>
+          <p class="mono mt-3 text-sm text-emerald-300">eslint + eslint-plugin-security</p>
+          <p class="muted mt-2"><code>npm run lint</code> applies <code>eslint:recommended</code> and <code>plugin:security/recommended-legacy</code> to <code>app.js</code>. Last run: 0 errors, 0 warnings.</p>
+        </div>
+        <div class="card">
+          <div class="flex items-center justify-between">
+            <p class="kpi-label">Gate 3 · Dependency Scanning</p>
+            <span class="badge badge-pass">PASSED</span>
+          </div>
+          <p class="mono mt-3 text-sm text-emerald-300">npm audit --audit-level=critical</p>
+          <p class="muted mt-2">Fails the build on any critical CVE in the dependency tree. Last run: found 0 vulnerabilities.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 class="card-title mb-0">Pipeline Definition — <code class="text-emerald-300">.github/workflows/deploy.yml</code></h3>
+          <span class="muted">deploy runs only if <code>security-and-quality</code> succeeds (<code>needs:</code>)</span>
+        </div>
+<pre class="code-block max-h-[32rem]"><code>name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  security-and-quality:
+    name: Security Gates (Secret Scan, SAST, SCA)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Gate 1 - Secret Detection (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Gate 2 - SAST &amp; Security Linting (ESLint Security)
+        run: npm run lint
+
+      - name: Gate 3 - SCA Dependency Vulnerability Audit
+        run: npm run security:audit
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: security-and-quality
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Static Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4</code></pre>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Applied Security Headers &amp; Application Controls</h3>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead><tr><th scope="col">Control</th><th scope="col">Implementation</th><th scope="col">Threat Mitigated</th></tr></thead>
+            <tbody>
+              <tr><td class="font-semibold">Content Security Policy</td><td><code>&lt;meta http-equiv="Content-Security-Policy"&gt;</code> limits scripts to self, Tailwind and jsDelivr; styles to self and Google Fonts; <code>connect-src 'self'</code></td><td>Loading or exfiltrating to untrusted origins; injected third-party scripts</td></tr>
+              <tr><td class="font-semibold">X-Content-Type-Options</td><td><code>nosniff</code></td><td>MIME-type sniffing of uploaded or served content</td></tr>
+              <tr><td class="font-semibold">Referrer-Policy</td><td><code>strict-origin-when-cross-origin</code></td><td>Leaking full page URLs to third-party sites</td></tr>
+              <tr><td class="font-semibold">DOM XSS sanitization</td><td><code>escapeHTML()</code> encodes <code>&amp; &lt; &gt; " ' `</code> on every dynamic value before it reaches <code>innerHTML</code>; toasts use <code>textContent</code></td><td>Stored XSS via request titles, descriptions or notes</td></tr>
+              <tr><td class="font-semibold">Strict FSM transition validation</td><td><code>VALID_TRANSITIONS</code> plus a role check in <code>transitionRequest()</code>; invalid moves are rejected</td><td>Workflow tampering, skipped approvals, reopening terminal requests</td></tr>
+              <tr><td class="font-semibold">Input allowlists &amp; length limits</td><td>Department/type/priority allowlists, <code>/^EMP-\d{3,5}$/</code>, 5–100 and 15–500 character bounds</td><td>Malformed or oversized data, injection payloads</td></tr>
+              <tr><td class="font-semibold">CSV formula neutralisation</td><td>Cells beginning with <code>= + - @</code> are prefixed with <code>'</code> and quotes are doubled</td><td>CSV/formula injection when exports open in Excel</td></tr>
+              <tr><td class="font-semibold">No dynamic code execution</td><td>No <code>eval()</code>, <code>Function()</code> or string timers; enforced by <code>eslint-plugin-security</code></td><td>Arbitrary code execution</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== AREA 6 — AI REVIEW LOG & HANDOVER ===================== -->
+    <section id="section-ai-log" role="tabpanel" aria-label="AI Review Log and Handover" class="space-y-6" hidden>
+      <div>
+        <h2 class="section-heading">AI Review Log &amp; Handover</h2>
+        <p class="section-sub">How AI tools were used, what they got wrong, and how to use and maintain the portal.</p>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">AI Tools Declaration</h3>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="rounded-lg border border-slate-800 bg-slate-950 p-4">
+            <p class="font-semibold text-slate-100">Claude Code / Claude Desktop Pro</p>
+            <p class="muted mt-1">UI scaffolding (this page and <code>app.js</code>) and generation of the 36-record synthetic dataset.</p>
+          </div>
+          <div class="rounded-lg border border-slate-800 bg-slate-950 p-4">
+            <p class="font-semibold text-slate-100">Google Gemini</p>
+            <p class="muted mt-1">DevSecOps pipeline configuration, ESLint v8 plugin compatibility research, and requirements analysis.</p>
+          </div>
+        </div>
+        <p class="muted mt-3">All AI output was reviewed, tested in the browser and gated by the CI pipeline before being merged. The issues below were found during that review.</p>
+      </div>
+
+      <div class="space-y-4">
+        <article class="card">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="badge badge-rejected">Security</span>
+            <h3 class="text-sm font-semibold text-slate-100">Issue 1 — DOM XSS via raw <code>innerHTML</code></h3>
+          </div>
+          <p class="muted mt-2">Generated table-rendering code interpolated user-supplied titles straight into <code>innerHTML</code>. A title such as <code>&lt;img src=x onerror=alert(1)&gt;</code> would execute in every viewer's browser. Fixed with an <code>escapeHTML()</code> sanitizer on every dynamic value, backed by a CSP header.</p>
+          <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+<pre class="code-block code-before">// BEFORE
+row.innerHTML = `&lt;td&gt;${req.title}&lt;/td&gt;
+  &lt;td&gt;${req.description}&lt;/td&gt;`;</pre>
+<pre class="code-block code-after">// AFTER
+function escapeHTML(str) {
+  return String(str).replace(/[&amp;&lt;&gt;"'`]/g,
+    (ch) =&gt; HTML_ESCAPES[ch]);
+}
+row.innerHTML = `&lt;td&gt;${escapeHTML(req.title)}&lt;/td&gt;
+  &lt;td&gt;${escapeHTML(req.description)}&lt;/td&gt;`;
+// + &lt;meta http-equiv="Content-Security-Policy" ...&gt;</pre>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="badge badge-under-review">Logic</span>
+            <h3 class="text-sm font-semibold text-slate-100">Issue 2 — Unrestricted status dropdown</h3>
+          </div>
+          <p class="muted mt-2">The first draft offered a free <code>&lt;select&gt;</code> of all five statuses, so a request could jump from Submitted straight to Completed or be reopened after rejection. Replaced with a deterministic <code>VALID_TRANSITIONS</code> state machine and per-transition buttons.</p>
+          <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+<pre class="code-block code-before">// BEFORE
+statusSelect.addEventListener("change", (e) =&gt; {
+  request.status = e.target.value; // any → any
+  save();
+});</pre>
+<pre class="code-block code-after">// AFTER
+const VALID_TRANSITIONS = {
+  Submitted: ["Under Review"],
+  "Under Review": ["Approved", "Rejected"],
+  Approved: ["Completed"],
+  Rejected: [], Completed: [],
+};
+if (!canTransition(request.status, toStatus)) {
+  showToast(`Blocked: ${request.status} → ${toStatus}`, "error");
+  return false;
+}</pre>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="badge badge-approved">Quality / DevSecOps</span>
+            <h3 class="text-sm font-semibold text-slate-100">Issue 3 — ESLint v8 circular config error</h3>
+          </div>
+          <p class="muted mt-2"><code>eslint-plugin-security</code> v2 exports a flat-config object as <code>recommended</code>. Under ESLint v8's legacy <code>.eslintrc</code> format this crashed the lint gate with <code>TypeError: Converting circular structure to JSON</code>. Switched to the legacy preset.</p>
+          <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+<pre class="code-block code-before">// BEFORE — .eslintrc.json
+"extends": [
+  "eslint:recommended",
+  "plugin:security/recommended"
+]</pre>
+<pre class="code-block code-after">// AFTER — .eslintrc.json
+"extends": [
+  "eslint:recommended",
+  "plugin:security/recommended-legacy"
+]</pre>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="badge badge-under-review">Logic / Quality</span>
+            <h3 class="text-sm font-semibold text-slate-100">Issue 4 — <code>NaN%</code> on empty filters &amp; Chart.js canvas leaks</h3>
+          </div>
+          <p class="muted mt-2">Filtering to a set with no decided requests divided by zero and rendered <code>NaN%</code>. Each re-render also created a new Chart on the same canvas without destroying the old one, causing flicker, stale tooltips and growing memory use. Added zero-guards and <code>.destroy()</code> before each re-create.</p>
+          <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+<pre class="code-block code-before">// BEFORE
+const rate = (approved / decided * 100).toFixed(1) + "%";
+deptChart = new Chart(canvas, config);</pre>
+<pre class="code-block code-after">// AFTER
+const approvalRate = decided &gt; 0
+  ? (approvedOrCompleted / decided) * 100 : 0;
+
+function createChart(key, config) {
+  destroyChart(key); // existing.destroy()
+  state.charts[key] = new Chart(byId(key), config);
+}</pre>
+          </div>
+        </article>
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="card">
+          <h3 class="card-title">End-User Guide</h3>
+          <div class="space-y-4 text-sm text-slate-300">
+            <div>
+              <p class="font-semibold text-slate-100">Staff — submit a request</p>
+              <ol class="mt-1 list-decimal space-y-1 pl-5">
+                <li>Choose <em>Staff View</em> in the Role selector.</li>
+                <li>Open <em>Workflow</em> and complete <em>Submit New Request</em>, using your <code>EMP-xxx</code> ID.</li>
+                <li>Fix any red inline messages and submit; your request appears at the top of the queue as <em>Submitted</em>.</li>
+                <li>Click <em>History</em> at any time to see its progress.</li>
+              </ol>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-100">Managers — review and approve</p>
+              <ol class="mt-1 list-decimal space-y-1 pl-5">
+                <li>Choose <em>Manager View</em>; transition buttons appear in the queue.</li>
+                <li>Use the status pills or search to find requests, then click <em>Move to Review</em>.</li>
+                <li>For a decision, open <em>History</em>, add a manager note, and click <em>Approve</em> or <em>Reject</em>.</li>
+                <li>Once delivered, click <em>Mark Completed</em> on approved requests.</li>
+              </ol>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-100">Leadership — filter KPIs</p>
+              <ol class="mt-1 list-decimal space-y-1 pl-5">
+                <li>Choose <em>Leadership View</em> (read-only) and open <em>Dashboard</em>.</li>
+                <li>Filter by department, status, priority or date range; all KPIs and charts update instantly.</li>
+                <li>Watch <em>Overdue Requests</em> for SLA breaches; use <em>Reset Filters</em> to return to the full view.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Developer Handover Guide</h3>
+          <div class="space-y-3 text-sm text-slate-300">
+            <p class="font-semibold text-slate-100">1. Clone and install</p>
+<pre class="code-block">git clone https://github.com/KVKMadithya/eguardian-service-portal.git
+cd eguardian-service-portal
+npm install</pre>
+            <p class="font-semibold text-slate-100">2. Run locally</p>
+<pre class="code-block">python3 -m http.server 8080
+# open http://localhost:8080</pre>
+            <p class="muted">Serve over HTTP rather than opening the file directly so the CSP <code>'self'</code> source resolves correctly.</p>
+            <p class="font-semibold text-slate-100">3. Modify the dataset or KPIs</p>
+            <ul class="list-disc space-y-1 pl-5">
+              <li>Edit records in <code>INITIAL_REQUESTS</code> in <code>app.js</code>, then click <em>Reset Demo Data</em> (or bump <code>STORAGE_KEY</code>) to reload them.</li>
+              <li>KPI logic lives in <code>computeKPIs()</code>; charts in <code>renderCharts()</code>; the SLA in <code>PORTAL_CONFIG.slaThresholdDays</code>.</li>
+              <li>Lifecycle rules live in <code>VALID_TRANSITIONS</code>; role rights in <code>ROLE_PERMISSIONS</code>.</li>
+            </ul>
+            <p class="font-semibold text-slate-100">4. Run the security gates locally</p>
+<pre class="code-block">npm run lint
+npm run security:audit</pre>
+            <p class="font-semibold text-slate-100">5. Redeploy</p>
+<pre class="code-block">git add .
+git commit -m "Describe your change"
+git push origin main</pre>
+            <p class="muted">The push triggers the DevSecOps Pipeline; if all three gates pass, the site redeploys to <a data-link="live" href="https://kvkmadithya.github.io/eguardian-service-portal/" class="text-emerald-400 underline">kvkmadithya.github.io/eguardian-service-portal</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+    eGuardian Service Request Portal · synthetic demo data only ·
+    <a data-link="repo" href="https://github.com/KVKMadithya/eguardian-service-portal" class="text-slate-400 underline">source</a>
+  </footer>
+
+  <!-- ===================== STATUS HISTORY MODAL ===================== -->
+  <div id="historyModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true" hidden>
+    <div class="modal-panel">
+      <div class="flex items-start justify-between gap-4">
+        <h2 id="modalTitle" class="text-base font-semibold text-slate-100">Request History</h2>
+        <button type="button" class="btn btn-sm btn-ghost" data-action="close-modal" aria-label="Close dialog">✕</button>
+      </div>
+      <div id="modalMeta" class="mt-2 space-y-2 text-sm text-slate-300"></div>
+      <h3 class="mt-5 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status History</h3>
+      <ol id="modalHistory" class="timeline"></ol>
+      <div id="managerNoteWrap" class="mt-4" data-requires-transition>
+        <label for="managerNote" class="field-label">Manager Note (optional)</label>
+        <textarea id="managerNote" rows="2" maxlength="300" class="field" placeholder="Reason for this decision"></textarea>
+      </div>
+      <div id="modalActions" class="mt-4 flex flex-wrap gap-2"></div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

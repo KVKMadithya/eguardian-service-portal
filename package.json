@@ -1,0 +1,14 @@
+{
+  "name": "eguardian-service-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise Service Request Portal with DevSecOps CI/CD Pipeline",
+  "scripts": {
+    "lint": "eslint app.js",
+    "security:audit": "npm audit --audit-level=critical"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-plugin-security": "^2.1.1"
+  }
+}
