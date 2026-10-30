@@ -13,135 +13,316 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
+  <meta name="color-scheme" content="light dark">
+
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Runs synchronously before first paint: sets Tailwind darkMode and applies the saved theme (no flash). -->
+  <script src="theme-init.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+    /* ---------- Design tokens: light (default) ---------- */
+    :root {
+      --bg: #f5f7fb;
+      --bg-glow-1: rgba(99, 102, 241, 0.10);
+      --bg-glow-2: rgba(16, 185, 129, 0.09);
+      --surface: rgba(255, 255, 255, 0.72);
+      --surface-solid: #ffffff;
+      --surface-inset: #f8fafc;
+      --surface-hover: rgba(241, 245, 249, 0.9);
+      --header-bg: rgba(245, 247, 251, 0.78);
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --text-2: #334155;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+      --accent: #059669;
+      --accent-strong: #047857;
+      --accent-soft: rgba(16, 185, 129, 0.12);
+      --ring: rgba(16, 185, 129, 0.38);
+      --code: #047857;
+      --danger: #dc2626;
+      --gradient-border: linear-gradient(135deg, rgba(99, 102, 241, 0.32), rgba(16, 185, 129, 0.32));
+      --gradient-danger: linear-gradient(135deg, rgba(239, 68, 68, 0.45), rgba(249, 115, 22, 0.25));
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px -12px rgba(15, 23, 42, 0.14);
+      --shadow-lg: 0 28px 56px -16px rgba(15, 23, 42, 0.28);
+      --glow: 0 0 0 transparent;
+      --chart-text: #475569;
+      --chart-grid: rgba(15, 23, 42, 0.08);
+      --chart-surface: #ffffff;
+      --tooltip-bg: #0f172a;
+      --tooltip-text: #f8fafc;
+    }
+
+    /* ---------- Design tokens: dark ---------- */
+    .dark {
+      --bg: #020617;
+      --bg-glow-1: rgba(99, 102, 241, 0.16);
+      --bg-glow-2: rgba(16, 185, 129, 0.10);
+      --surface: rgba(15, 23, 42, 0.62);
+      --surface-solid: #0f172a;
+      --surface-inset: rgba(2, 6, 23, 0.7);
+      --surface-hover: rgba(30, 41, 59, 0.55);
+      --header-bg: rgba(2, 6, 23, 0.72);
+      --border: #1e293b;
+      --border-strong: #334155;
+      --text: #f1f5f9;
+      --text-2: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+      --accent: #34d399;
+      --accent-strong: #6ee7b7;
+      --accent-soft: rgba(52, 211, 153, 0.12);
+      --ring: rgba(52, 211, 153, 0.42);
+      --code: #6ee7b7;
+      --danger: #f87171;
+      --gradient-border: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(16, 185, 129, 0.22));
+      --gradient-danger: linear-gradient(135deg, rgba(239, 68, 68, 0.45), rgba(249, 115, 22, 0.18));
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px -16px rgba(0, 0, 0, 0.7);
+      --shadow-lg: 0 32px 64px -16px rgba(0, 0, 0, 0.8);
+      --glow: 0 0 24px -6px rgba(52, 211, 153, 0.25);
+      --chart-text: #94a3b8;
+      --chart-grid: rgba(148, 163, 184, 0.14);
+      --chart-surface: #0f172a;
+      --tooltip-bg: #f8fafc;
+      --tooltip-text: #0f172a;
+    }
+
+    /* ---------- Base ---------- */
     [hidden] { display: none !important; }
-    html { color-scheme: dark; }
-    body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; background: #020617; color: #e2e8f0; }
+    html { color-scheme: light; }
+    html.dark { color-scheme: dark; }
+    body {
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(60rem 36rem at 0% -10%, var(--bg-glow-1), transparent 60%),
+        radial-gradient(48rem 30rem at 100% 0%, var(--bg-glow-2), transparent 60%);
+      background-attachment: fixed;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
     code, pre, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+    ::selection { background: var(--accent-soft); }
 
-    .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 0.75rem; padding: 1.25rem; }
-    .card-title { font-size: 0.95rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.75rem; }
-    .section-heading { font-size: 1.35rem; font-weight: 700; color: #f8fafc; }
-    .section-sub { color: #94a3b8; font-size: 0.9rem; margin-top: 0.25rem; }
-    .muted { color: #94a3b8; font-size: 0.85rem; }
+    /* Theme cross-fade: enabled only after first paint so the initial load never animates.
+       :where() keeps specificity at zero so component transitions below still win. */
+    :where(.theme-ready *), :where(.theme-ready *)::before, :where(.theme-ready *)::after {
+      transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+      transition-duration: 300ms;
+      transition-timing-function: ease-in-out;
+    }
 
-    .tab-btn { white-space: nowrap; padding: 0.55rem 0.9rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 500; color: #94a3b8; transition: background 0.15s, color 0.15s; }
-    .tab-btn:hover { color: #e2e8f0; background: #1e293b; }
-    .tab-btn.active { color: #022c22; background: #34d399; }
+    /* ---------- Header ---------- */
+    .site-header { background: var(--header-bg); border-bottom: 1px solid var(--border); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); }
+    .brand-mark { background: linear-gradient(90deg, #6366f1, #10b981); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .ci-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; color: #047857; background: rgba(16, 185, 129, 0.10); border: 1px solid rgba(16, 185, 129, 0.35); }
+    .dark .ci-badge { color: #6ee7b7; box-shadow: 0 0 18px -4px rgba(16, 185, 129, 0.45); }
+    .ci-dot { position: relative; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #10b981; }
+    .ci-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #10b981; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+    @keyframes ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
 
-    .field-label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; margin-bottom: 0.3rem; }
-    .field { width: 100%; background: #020617; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.5rem 0.65rem; font-size: 0.875rem; color: #e2e8f0; }
-    .field:focus { outline: 2px solid #34d399; outline-offset: 1px; border-color: transparent; }
+    .theme-toggle { position: relative; display: inline-flex; width: 2.35rem; height: 2.35rem; border-radius: 0.65rem; border: 1px solid var(--border-strong); background: var(--surface-solid); color: var(--text-2); cursor: pointer; box-shadow: var(--shadow-sm);
+      transition: background-color 300ms ease-in-out, border-color 300ms ease-in-out, color 300ms ease-in-out, box-shadow 300ms ease-in-out, transform 150ms ease-out; }
+    .theme-toggle:hover { transform: translateY(-1px); box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-soft); color: var(--accent); }
+    .theme-toggle:active { transform: scale(0.92); }
+    .theme-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+    .theme-toggle svg { position: absolute; inset: 0; margin: auto; width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 300ms ease; }
+    .theme-toggle .icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+    .theme-toggle .icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.4); }
+    .dark .theme-toggle .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.4); }
+    .dark .theme-toggle .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+
+    .tab-btn { white-space: nowrap; padding: 0.5rem 0.9rem; border-radius: 0.6rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); border: 1px solid transparent;
+      transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease, transform 150ms ease-out; }
+    .tab-btn:hover { color: var(--text); background: var(--surface-hover); transform: translateY(-1px); }
+    .tab-btn:active { transform: scale(0.97); }
+    .tab-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+    .tab-btn.active { color: var(--accent-strong); background: var(--accent-soft); border-color: var(--ring); box-shadow: var(--glow); }
+
+    /* ---------- Cards (glass + gradient accent border) ---------- */
+    .card { position: relative; background: var(--surface); border: 1px solid transparent; border-radius: 0.9rem; padding: 1.35rem; box-shadow: var(--shadow-md);
+      backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); }
+    .card::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: var(--gradient-border); pointer-events: none;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+    .card-danger::before { background: var(--gradient-danger); }
+    .card-success::before { background: linear-gradient(135deg, rgba(16, 185, 129, 0.5), rgba(99, 102, 241, 0.25)); }
+    .card-kpi, a.link-card { transition: transform 200ms ease-out, box-shadow 300ms ease-in-out, background-color 300ms ease-in-out; }
+    .card-kpi:hover, a.link-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg), var(--glow); }
+    a.link-card { display: block; }
+    a.link-card:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+
+    .card-title { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 0.75rem; letter-spacing: -0.005em; }
+    .section-heading { font-size: 1.5rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .section-sub { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+    .muted { color: var(--text-muted); font-size: 0.85rem; }
+    .inset-surface { background: var(--surface-inset); }
+    .thead-solid { background: var(--surface-solid); }
+
+    /* ---------- Tab panel entrance ---------- */
+    [role="tabpanel"]:not([hidden]) { animation: panel-in 300ms ease-out both; }
+    @keyframes panel-in { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ---------- Form controls ---------- */
+    .field-label { display: block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .field { width: 100%; background: var(--surface-solid); border: 1px solid var(--border-strong); border-radius: 0.6rem; padding: 0.5rem 0.7rem; font-size: 0.875rem; color: var(--text); box-shadow: var(--shadow-sm);
+      transition: background-color 300ms ease-in-out, border-color 200ms ease, color 300ms ease-in-out, box-shadow 200ms ease, transform 150ms ease-out; }
+    .field::placeholder { color: var(--text-faint); }
+    select.field { cursor: pointer; }
+    select.field:hover:not(:disabled), input.field:hover:not(:disabled) { border-color: var(--accent); }
+    select.field:active:not(:disabled) { transform: scale(0.985); }
+    .field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
     .field:disabled { opacity: 0.5; cursor: not-allowed; }
-    .field.is-invalid { border-color: #f87171; }
-    .field-error { min-height: 1rem; font-size: 0.75rem; color: #f87171; margin-top: 0.25rem; }
+    .field.is-invalid { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18); }
+    .field-error { min-height: 1rem; font-size: 0.75rem; color: var(--danger); margin-top: 0.25rem; }
 
-    .btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.9rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 600; background: #1e293b; color: #e2e8f0; border: 1px solid #334155; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
-    .btn:hover { background: #273449; border-color: #475569; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: #10b981; border-color: #10b981; color: #022c22; }
-    .btn-primary:hover { background: #34d399; border-color: #34d399; }
-    .btn-danger { background: transparent; border-color: #7f1d1d; color: #fca5a5; }
-    .btn-danger:hover { background: #450a0a; }
-    .btn-ghost { background: transparent; }
-    .btn-sm { padding: 0.25rem 0.55rem; font-size: 0.75rem; }
-    .btn-to-under-review { border-color: #b45309; color: #fcd34d; }
-    .btn-to-approved { border-color: #1d4ed8; color: #93c5fd; }
-    .btn-to-rejected { border-color: #b91c1c; color: #fca5a5; }
-    .btn-to-completed { border-color: #047857; color: #6ee7b7; }
+    /* ---------- Buttons ---------- */
+    .btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.95rem; border-radius: 0.6rem; font-size: 0.85rem; font-weight: 600; background: var(--surface-solid); color: var(--text); border: 1px solid var(--border-strong); cursor: pointer; box-shadow: var(--shadow-sm);
+      transition: background-color 300ms ease-in-out, border-color 200ms ease, color 300ms ease-in-out, box-shadow 200ms ease, transform 150ms ease-out; }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--text-faint); }
+    .btn:active { transform: translateY(0) scale(0.97); box-shadow: var(--shadow-sm); }
+    .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-primary { background: linear-gradient(135deg, #059669, #047857); border-color: #047857; color: #ffffff; }
+    .btn-primary:hover { border-color: #065f46; box-shadow: 0 10px 24px -10px rgba(5, 150, 105, 0.65); }
+    .btn-danger { background: transparent; border-color: rgba(239, 68, 68, 0.45); color: var(--danger); }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.08); border-color: var(--danger); }
+    .btn-ghost { background: transparent; box-shadow: none; }
+    .btn-sm { padding: 0.25rem 0.6rem; font-size: 0.75rem; border-radius: 0.5rem; }
+    .btn-to-under-review { border-color: rgba(245, 158, 11, 0.55); color: #b45309; }
+    .btn-to-approved { border-color: rgba(59, 130, 246, 0.55); color: #1d4ed8; }
+    .btn-to-rejected { border-color: rgba(239, 68, 68, 0.55); color: #b91c1c; }
+    .btn-to-completed { border-color: rgba(16, 185, 129, 0.55); color: #047857; }
+    .dark .btn-to-under-review { color: #fcd34d; }
+    .dark .btn-to-approved { color: #93c5fd; }
+    .dark .btn-to-rejected { color: #fca5a5; }
+    .dark .btn-to-completed { color: #6ee7b7; }
 
-    .pill { padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; border: 1px solid #334155; color: #94a3b8; background: transparent; cursor: pointer; }
-    .pill:hover { color: #e2e8f0; }
-    .pill.active { background: #e2e8f0; color: #0f172a; border-color: #e2e8f0; }
+    .pill { padding: 0.3rem 0.8rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--border-strong); color: var(--text-muted); background: var(--surface-solid); cursor: pointer;
+      transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, transform 150ms ease-out; }
+    .pill:hover { color: var(--text); transform: translateY(-1px); }
+    .pill:active { transform: scale(0.95); }
+    .pill:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+    .pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 
-    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
-    .badge-submitted { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; border-color: #475569; }
-    .badge-under-review { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border-color: #92400e; }
-    .badge-approved { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: #1e40af; }
-    .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: #991b1b; }
-    .badge-completed { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: #065f46; }
-    .badge-low { color: #94a3b8; border-color: #334155; }
-    .badge-medium { color: #7dd3fc; border-color: #075985; }
-    .badge-high { color: #fdba74; border-color: #9a3412; }
-    .badge-critical { color: #fecaca; background: rgba(220, 38, 38, 0.3); border-color: #dc2626; }
-    .badge-overdue { color: #fecaca; background: #7f1d1d; }
-    .badge-role { background: #1e293b; color: #e2e8f0; border-color: #334155; }
-    .badge-role-manager { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: #1e40af; }
-    .badge-role-leadership { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border-color: #6b21a8; }
-    .badge-pass { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: #065f46; }
+    /* ---------- Badges (soft glow in dark mode) ---------- */
+    .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
+    .badge-submitted { background: rgba(100, 116, 139, 0.12); color: #475569; border-color: rgba(100, 116, 139, 0.35); }
+    .badge-under-review { background: rgba(245, 158, 11, 0.12); color: #b45309; border-color: rgba(245, 158, 11, 0.4); }
+    .badge-approved { background: rgba(59, 130, 246, 0.10); color: #1d4ed8; border-color: rgba(59, 130, 246, 0.35); }
+    .badge-rejected { background: rgba(239, 68, 68, 0.10); color: #b91c1c; border-color: rgba(239, 68, 68, 0.35); }
+    .badge-completed { background: rgba(16, 185, 129, 0.12); color: #047857; border-color: rgba(16, 185, 129, 0.4); }
+    .badge-pass { background: rgba(16, 185, 129, 0.12); color: #047857; border-color: rgba(16, 185, 129, 0.4); }
+    .dark .badge-submitted { color: #cbd5e1; background: rgba(100, 116, 139, 0.2); }
+    .dark .badge-under-review { color: #fcd34d; box-shadow: 0 0 14px -4px rgba(245, 158, 11, 0.5); }
+    .dark .badge-approved { color: #93c5fd; box-shadow: 0 0 14px -4px rgba(59, 130, 246, 0.55); }
+    .dark .badge-rejected { color: #fca5a5; box-shadow: 0 0 14px -4px rgba(239, 68, 68, 0.5); }
+    .dark .badge-completed, .dark .badge-pass { color: #6ee7b7; box-shadow: 0 0 14px -4px rgba(16, 185, 129, 0.55); }
+    .badge-low { color: var(--text-muted); border-color: var(--border-strong); }
+    .badge-medium { color: #0369a1; border-color: rgba(14, 165, 233, 0.4); }
+    .badge-high { color: #c2410c; border-color: rgba(249, 115, 22, 0.45); }
+    .badge-critical { color: #ffffff; background: #dc2626; border-color: #dc2626; }
+    .dark .badge-medium { color: #7dd3fc; }
+    .dark .badge-high { color: #fdba74; }
+    .dark .badge-critical { color: #fecaca; background: rgba(220, 38, 38, 0.3); box-shadow: 0 0 14px -4px rgba(239, 68, 68, 0.6); }
+    .badge-overdue { color: #ffffff; background: #b91c1c; }
+    .dark .badge-overdue { color: #fecaca; background: #7f1d1d; }
+    .badge-role { background: var(--surface-solid); color: var(--text-2); border-color: var(--border-strong); }
+    .badge-role-manager { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; border-color: rgba(59, 130, 246, 0.4); }
+    .badge-role-leadership { background: rgba(168, 85, 247, 0.12); color: #7e22ce; border-color: rgba(168, 85, 247, 0.4); }
+    .dark .badge-role-manager { color: #93c5fd; }
+    .dark .badge-role-leadership { color: #d8b4fe; }
 
-    .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    .data-table th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600; padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; white-space: nowrap; }
-    .data-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; vertical-align: top; }
-    .data-table tbody tr:hover { background: rgba(30, 41, 59, 0.5); }
-    .data-table code { color: #6ee7b7; font-size: 0.78rem; }
+    /* ---------- Tables ---------- */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; color: var(--text-2); }
+    .data-table th { text-align: left; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .data-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .data-table tbody tr { transition: background-color 150ms ease; }
+    .data-table tbody tr:hover { background: var(--surface-hover); }
+    .data-table code { color: var(--code); font-size: 0.78rem; }
     .row-overdue td:first-child { box-shadow: inset 3px 0 0 #ef4444; }
     .actions-cell { white-space: nowrap; }
     .actions-cell .btn { margin: 0 0.15rem 0.2rem 0; }
-    td.empty { text-align: center; color: #64748b; padding: 2rem; }
+    td.empty { text-align: center; color: var(--text-faint); padding: 2rem; }
 
-    .kpi-value { font-size: 2rem; font-weight: 700; color: #f8fafc; line-height: 1.1; font-variant-numeric: tabular-nums; }
-    .kpi-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; }
+    /* ---------- KPIs & charts ---------- */
+    .kpi-value { font-size: 2.1rem; font-weight: 700; color: var(--text); line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .kpi-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
     .chart-box { position: relative; height: 260px; }
 
-    .code-block { background: #020617; border: 1px solid #1e293b; border-radius: 0.5rem; padding: 0.9rem 1rem; font-size: 0.78rem; line-height: 1.55; color: #cbd5e1; overflow-x: auto; white-space: pre; }
+    /* ---------- Code ---------- */
+    .code-block { background: var(--surface-inset); border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.9rem 1rem; font-size: 0.78rem; line-height: 1.6; color: var(--text-2); overflow-x: auto; white-space: pre; }
     .code-before { border-left: 3px solid #ef4444; }
     .code-after { border-left: 3px solid #10b981; }
 
-    .fsm-node { padding: 0.45rem 0.9rem; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600; border: 1px solid; }
-    .fsm-arrow { color: #475569; font-weight: 700; }
+    .fsm-node { padding: 0.45rem 0.9rem; border-radius: 0.6rem; font-size: 0.8rem; font-weight: 600; border: 1px solid; }
+    .fsm-arrow { color: var(--text-faint); font-weight: 700; }
 
-    .timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid #1e293b; }
+    /* ---------- Timeline ---------- */
+    .timeline { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); }
     .timeline-item { position: relative; padding: 0 0 1rem 1.1rem; }
-    .timeline-item::before { content: ""; position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #34d399; }
-    .timeline-item time { font-size: 0.75rem; color: #94a3b8; margin-left: 0.4rem; font-family: "JetBrains Mono", monospace; }
-    .timeline-actor { font-size: 0.75rem; color: #cbd5e1; margin-left: 0.4rem; font-weight: 600; }
-    .timeline-note { font-size: 0.82rem; color: #cbd5e1; margin-top: 0.25rem; }
+    .timeline-item::before { content: ""; position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .timeline-item time { font-size: 0.75rem; color: var(--text-muted); margin-left: 0.4rem; font-family: "JetBrains Mono", monospace; }
+    .timeline-actor { font-size: 0.75rem; color: var(--text-2); margin-left: 0.4rem; font-weight: 600; }
+    .timeline-note { font-size: 0.82rem; color: var(--text-2); margin-top: 0.25rem; }
 
-    .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(2, 6, 23, 0.8); display: flex; align-items: flex-start; justify-content: center; padding: 4vh 1rem; overflow-y: auto; }
-    .modal-panel { width: 100%; max-width: 40rem; background: #0f172a; border: 1px solid #334155; border-radius: 0.9rem; padding: 1.5rem; }
+    /* ---------- Modal ---------- */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(2, 6, 23, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: 5vh 1rem; overflow-y: auto; animation: fade-in 200ms ease-out both; }
+    .modal-panel { position: relative; width: 100%; max-width: 40rem; background: var(--surface-solid); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; box-shadow: var(--shadow-lg); animation: modal-in 250ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modal-in { from { opacity: 0; transform: translateY(0.75rem) scale(0.97); } to { opacity: 1; transform: none; } }
 
+    /* ---------- Toasts ---------- */
     .toast-container { position: fixed; right: 1rem; bottom: 1rem; z-index: 60; display: flex; flex-direction: column; gap: 0.5rem; max-width: calc(100vw - 2rem); }
-    .toast { padding: 0.7rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 500; background: #1e293b; color: #f1f5f9; border-left: 4px solid #64748b; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); }
+    .toast { padding: 0.75rem 1rem; border-radius: 0.65rem; font-size: 0.85rem; font-weight: 500; background: var(--surface-solid); color: var(--text); border: 1px solid var(--border); border-left: 4px solid var(--text-faint); box-shadow: var(--shadow-lg); animation: toast-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .toast-leave { animation: toast-out 220ms ease-in forwards; }
     .toast-success { border-left-color: #10b981; }
     .toast-error { border-left-color: #ef4444; }
     .toast-warning { border-left-color: #f59e0b; }
-    .toast-info { border-left-color: #3b82f6; }
+    .toast-info { border-left-color: #6366f1; }
+    @keyframes toast-in { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: none; } }
+    @keyframes toast-out { to { opacity: 0; transform: translateX(1rem); } }
 
-    .gwt dt { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #34d399; margin-top: 0.4rem; }
-    .gwt dd { font-size: 0.85rem; color: #cbd5e1; margin: 0; }
+    .gwt dt { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-top: 0.45rem; }
+    .gwt dd { font-size: 0.85rem; color: var(--text-2); margin: 0; }
 
-    a.link-card { display: block; transition: border-color 0.15s, transform 0.15s; }
-    a.link-card:hover { border-color: #34d399; transform: translateY(-1px); }
+    /* ---------- Accessibility: honour reduced-motion ---------- */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen">
 
   <!-- ===================== GLOBAL HEADER ===================== -->
-  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
+  <header class="site-header sticky top-0 z-40">
     <div class="mx-auto max-w-7xl px-4 py-3">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-3">
-          <h1 class="mono text-base font-semibold tracking-tight text-slate-100 sm:text-lg">
-            <span class="text-emerald-400">@EGUARDIAN</span> <span class="text-slate-500">//</span> Service Request Portal
+          <h1 class="mono text-base font-semibold tracking-tight sm:text-lg" style="color: var(--text)">
+            <span class="brand-mark">@EGUARDIAN</span> <span style="color: var(--text-faint)">//</span> Service Request Portal
           </h1>
-          <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions"
-             class="inline-flex items-center gap-1.5 rounded-full border border-emerald-700 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
-            <span class="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true"></span>
+          <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions" class="ci-badge">
+            <span class="ci-dot" aria-hidden="true"></span>
             CI/CD Pipeline: Passing
           </a>
         </div>
         <div class="flex items-center gap-2">
-          <label for="roleSwitcher" class="text-xs font-semibold uppercase tracking-wide text-slate-400">Role</label>
+          <label for="roleSwitcher" class="field-label mb-0">Role</label>
           <select id="roleSwitcher" class="field w-auto py-1.5 text-sm" aria-label="Switch active role">
             <option value="Staff">Staff View</option>
             <option value="Manager">Manager View</option>
             <option value="Leadership">Leadership View</option>
           </select>
           <span id="roleBadge" class="badge badge-role">Staff</span>
+          <button type="button" id="themeToggle" class="theme-toggle" data-action="toggle-theme" aria-label="Switch to dark mode" aria-pressed="false" title="Toggle light / dark mode">
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
         </div>
       </div>
       <nav class="-mx-1 mt-3 flex gap-1 overflow-x-auto pb-1" role="tablist" aria-label="Portal sections">
@@ -161,7 +342,7 @@
     <section id="section-dashboard" role="tabpanel" aria-label="Dashboard" class="space-y-6">
       <div>
         <h2 class="section-heading">Executive Dashboard</h2>
-        <p class="section-sub">Live KPIs and charts computed from the current request dataset. Filters apply to every KPI and chart. <span id="kpiRecordCount" class="mono text-emerald-400"></span></p>
+        <p class="section-sub">Live KPIs and charts computed from the current request dataset. Filters apply to every KPI and chart. <span id="kpiRecordCount" class="mono text-emerald-600 dark:text-emerald-400"></span></p>
       </div>
 
       <div class="card">
@@ -193,24 +374,24 @@
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="card">
+        <div class="card card-kpi">
           <p class="kpi-label">Open Requests</p>
           <p id="kpiOpen" class="kpi-value mt-2">0</p>
           <p class="muted mt-1">Submitted, Under Review or Approved</p>
         </div>
-        <div class="card">
+        <div class="card card-kpi">
           <p class="kpi-label">Avg Days to Approval</p>
           <p id="kpiAvgApproval" class="kpi-value mt-2">0.0</p>
           <p class="muted mt-1">createdAt → approvedAt, Approved + Completed</p>
         </div>
-        <div class="card">
+        <div class="card card-kpi">
           <p class="kpi-label">Approval Rate (%)</p>
           <p id="kpiApprovalRate" class="kpi-value mt-2">0.0%</p>
           <p class="muted mt-1">(Approved + Completed) ÷ decided</p>
         </div>
-        <div class="card border-red-900/60">
+        <div class="card card-kpi card-danger">
           <p class="kpi-label">Overdue Requests (&gt;<span id="slaThreshold">7</span> Days SLA)</p>
-          <p id="kpiOverdue" class="kpi-value mt-2 text-red-300">0</p>
+          <p id="kpiOverdue" class="kpi-value mt-2 text-red-600 dark:text-red-300">0</p>
           <p class="muted mt-1">Open requests older than the SLA threshold</p>
         </div>
       </div>
@@ -232,11 +413,11 @@
 
       <div class="card">
         <h3 class="card-title">Production SQL — KPI Queries</h3>
-        <p class="muted mb-4">PostgreSQL queries against the relational <code class="text-emerald-300">requests</code> table that reproduce each dashboard KPI. The demo pins "today" to 2026-10-30; production uses <code class="text-emerald-300">CURRENT_DATE</code>.</p>
+        <p class="muted mb-4">PostgreSQL queries against the relational <code class="text-emerald-700 dark:text-emerald-300">requests</code> table that reproduce each dashboard KPI. The demo pins "today" to 2026-10-30; production uses <code class="text-emerald-700 dark:text-emerald-300">CURRENT_DATE</code>.</p>
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div>
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-sm font-semibold text-slate-200">1. Open Requests</span>
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">1. Open Requests</span>
               <button type="button" class="btn btn-sm" data-action="copy-sql" data-target="sqlOpen">Copy</button>
             </div>
 <pre id="sqlOpen" class="code-block">SELECT COUNT(*) AS open_requests
@@ -245,7 +426,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved');</pre>
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-sm font-semibold text-slate-200">2. Avg Days to Approval</span>
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">2. Avg Days to Approval</span>
               <button type="button" class="btn btn-sm" data-action="copy-sql" data-target="sqlAvgApproval">Copy</button>
             </div>
 <pre id="sqlAvgApproval" class="code-block">SELECT ROUND(
@@ -257,7 +438,7 @@ WHERE status IN ('Approved', 'Completed')
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-sm font-semibold text-slate-200">3. Approval Rate (%)</span>
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">3. Approval Rate (%)</span>
               <button type="button" class="btn btn-sm" data-action="copy-sql" data-target="sqlApprovalRate">Copy</button>
             </div>
 <pre id="sqlApprovalRate" class="code-block">SELECT ROUND(
@@ -271,7 +452,7 @@ FROM requests;</pre>
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-sm font-semibold text-slate-200">4. Overdue Requests (&gt;7 Days SLA)</span>
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">4. Overdue Requests (&gt;7 Days SLA)</span>
               <button type="button" class="btn btn-sm" data-action="copy-sql" data-target="sqlOverdue">Copy</button>
             </div>
 <pre id="sqlOverdue" class="code-block">SELECT COUNT(*) AS overdue_requests
@@ -291,33 +472,33 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
       </div>
 
       <div class="card">
-        <h3 class="card-title">Enforced State Machine (<code class="text-emerald-300">VALID_TRANSITIONS</code>)</h3>
+        <h3 class="card-title">Enforced State Machine (<code class="text-emerald-700 dark:text-emerald-300">VALID_TRANSITIONS</code>)</h3>
         <div class="flex flex-wrap items-center gap-2">
-          <span class="fsm-node border-slate-600 bg-slate-500/10 text-slate-200">Submitted</span>
+          <span class="fsm-node border-slate-300 dark:border-slate-600 bg-slate-500/10 text-slate-800 dark:text-slate-200">Submitted</span>
           <span class="fsm-arrow" aria-hidden="true">➔</span>
-          <span class="fsm-node border-amber-700 bg-amber-500/10 text-amber-300">Under Review</span>
+          <span class="fsm-node border-amber-300 dark:border-amber-700 bg-amber-500/10 text-amber-700 dark:text-amber-300">Under Review</span>
           <span class="fsm-arrow" aria-hidden="true">➔</span>
           <span class="flex flex-col gap-1.5">
             <span class="flex items-center gap-2">
-              <span class="fsm-node border-blue-800 bg-blue-500/10 text-blue-300">Approved</span>
+              <span class="fsm-node border-blue-300 dark:border-blue-800 bg-blue-500/10 text-blue-700 dark:text-blue-300">Approved</span>
               <span class="fsm-arrow" aria-hidden="true">➔</span>
-              <span class="fsm-node border-emerald-800 bg-emerald-500/10 text-emerald-300">Completed</span>
+              <span class="fsm-node border-emerald-300 dark:border-emerald-800 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">Completed</span>
               <span class="text-xs text-slate-500">terminal</span>
             </span>
             <span class="flex items-center gap-2">
               <span class="text-xs font-semibold text-slate-500">OR</span>
-              <span class="fsm-node border-red-800 bg-red-500/10 text-red-300">Rejected</span>
+              <span class="fsm-node border-red-300 dark:border-red-800 bg-red-500/10 text-red-600 dark:text-red-300">Rejected</span>
               <span class="text-xs text-slate-500">terminal</span>
             </span>
           </span>
         </div>
-        <p class="muted mt-3">Any transition not listed is blocked client-side. Only the Manager role can move requests; approving stamps <code class="text-emerald-300">approvedAt</code> and every move appends to <code class="text-emerald-300">statusHistory</code>.</p>
+        <p class="muted mt-3">Any transition not listed is blocked client-side. Only the Manager role can move requests; approving stamps <code class="text-emerald-700 dark:text-emerald-300">approvedAt</code> and every move appends to <code class="text-emerald-700 dark:text-emerald-300">statusHistory</code>.</p>
       </div>
 
       <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div class="card xl:col-span-1">
           <h3 class="card-title">Submit New Request</h3>
-          <p id="formRoleNotice" class="mb-3 text-sm text-amber-300"></p>
+          <p id="formRoleNotice" class="mb-3 text-sm text-amber-700 dark:text-amber-300"></p>
           <form id="requestForm" novalidate class="space-y-2">
             <div>
               <label for="title" class="field-label">Title</label>
@@ -401,7 +582,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 class="section-heading">Sample Dataset</h2>
-          <p class="section-sub">Synthetic, fully anonymized service requests. <span id="datasetCount" class="mono text-emerald-400"></span></p>
+          <p class="section-sub">Synthetic, fully anonymized service requests. <span id="datasetCount" class="mono text-emerald-600 dark:text-emerald-400"></span></p>
         </div>
         <div class="flex flex-wrap gap-2">
           <button type="button" class="btn btn-primary" data-action="export-csv">Download CSV</button>
@@ -413,13 +594,13 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div class="card lg:col-span-1">
           <h3 class="card-title">Data Generation Methodology</h3>
-          <ul class="list-disc space-y-2 pl-5 text-sm text-slate-300">
-            <li><strong class="text-slate-100">36 records</strong> (<code class="text-emerald-300">REQ-1001</code>–<code class="text-emerald-300">REQ-1036</code>) created between 1 Sep and 28 Oct 2026, roughly 3–4 per week, so the trend chart has a realistic shape.</li>
+          <ul class="list-disc space-y-2 pl-5 text-sm text-slate-600 dark:text-slate-300">
+            <li><strong class="text-slate-900 dark:text-slate-100">36 records</strong> (<code class="text-emerald-700 dark:text-emerald-300">REQ-1001</code>–<code class="text-emerald-700 dark:text-emerald-300">REQ-1036</code>) created between 1 Sep and 28 Oct 2026, roughly 3–4 per week, so the trend chart has a realistic shape.</li>
             <li>Every department, request type, priority and status is represented, so all filters and chart segments have data.</li>
-            <li>Each <code class="text-emerald-300">statusHistory</code> was generated by walking the same state machine the app enforces: Submitted → Under Review (next day) → Approved/Rejected → Completed (two days after approval).</li>
+            <li>Each <code class="text-emerald-700 dark:text-emerald-300">statusHistory</code> was generated by walking the same state machine the app enforces: Submitted → Under Review (next day) → Approved/Rejected → Completed (two days after approval).</li>
             <li>12 open requests are deliberately older than 7 days so the Overdue KPI is populated.</li>
-            <li><strong class="text-slate-100">Zero real PII:</strong> requesters are sequential placeholders <code class="text-emerald-300">EMP-101</code>–<code class="text-emerald-300">EMP-136</code>; approvers are recorded by role ("Manager"), never by name. Titles and descriptions are generic business scenarios.</li>
-            <li>Data lives in the browser's <code class="text-emerald-300">localStorage</code> (<code class="text-emerald-300">eguardian_requests_v1</code>); <em>Reset Demo Data</em> restores the original 36 records.</li>
+            <li><strong class="text-slate-900 dark:text-slate-100">Zero real PII:</strong> requesters are sequential placeholders <code class="text-emerald-700 dark:text-emerald-300">EMP-101</code>–<code class="text-emerald-700 dark:text-emerald-300">EMP-136</code>; approvers are recorded by role ("Manager"), never by name. Titles and descriptions are generic business scenarios.</li>
+            <li>Data lives in the browser's <code class="text-emerald-700 dark:text-emerald-300">localStorage</code> (<code class="text-emerald-700 dark:text-emerald-300">eguardian_requests_v1</code>); <em>Reset Demo Data</em> restores the original 36 records.</li>
           </ul>
         </div>
 
@@ -452,7 +633,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
         <h3 class="card-title">Dataset Preview</h3>
         <div class="max-h-[32rem] overflow-auto">
           <table class="data-table">
-            <thead class="sticky top-0 bg-slate-900">
+            <thead class="sticky top-0 thead-solid">
               <tr>
                 <th scope="col">ID</th><th scope="col">Title</th><th scope="col">Requester</th><th scope="col">Department</th>
                 <th scope="col">Type</th><th scope="col">Priority</th><th scope="col">Status</th><th scope="col">Created</th>
@@ -472,38 +653,38 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
         <p class="section-sub">Problem, users, user stories, briefing outcomes, assumptions and data model.</p>
       </div>
 
-      <div class="card border-emerald-900/60">
+      <div class="card card-success">
         <h3 class="card-title">Problem Statement</h3>
-        <p class="text-sm leading-relaxed text-slate-300">
+        <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
           eGuardian's internal service requests — access grants, equipment, maintenance, licenses and cloud resources — are currently raised by email and tracked in departmental spreadsheets.
           Requests get lost between inboxes, there is no consistent approval path or audit trail, requesters cannot see where their request stands, and leadership has no reliable view of backlog, approval speed or SLA breaches.
-          This portal replaces that fragmented process with <strong class="text-slate-100">one centralized request workflow</strong> that enforces a fixed approval lifecycle, records who changed what and when, and feeds an <strong class="text-slate-100">executive dashboard</strong> of live KPIs.
+          This portal replaces that fragmented process with <strong class="text-slate-900 dark:text-slate-100">one centralized request workflow</strong> that enforces a fixed approval lifecycle, records who changed what and when, and feeds an <strong class="text-slate-900 dark:text-slate-100">executive dashboard</strong> of live KPIs.
         </p>
       </div>
 
       <div>
-        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Target Users</h3>
+        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Target Users</h3>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div class="card">
             <span class="badge badge-role">Staff</span>
-            <p class="mt-3 text-sm text-slate-300">Employees in any department who raise requests. They need a quick validated form and visibility of each request's status and history.</p>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">Employees in any department who raise requests. They need a quick validated form and visibility of each request's status and history.</p>
           </div>
           <div class="card">
             <span class="badge badge-role badge-role-manager">Managers</span>
-            <p class="mt-3 text-sm text-slate-300">Approvers who triage the queue, review, approve or reject with a note, and confirm completion — within a controlled, auditable lifecycle.</p>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">Approvers who triage the queue, review, approve or reject with a note, and confirm completion — within a controlled, auditable lifecycle.</p>
           </div>
           <div class="card">
             <span class="badge badge-role badge-role-leadership">Leadership</span>
-            <p class="mt-3 text-sm text-slate-300">Executives who need read-only, filterable KPIs on backlog, approval speed, approval rate and SLA breaches across departments.</p>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">Executives who need read-only, filterable KPIs on backlog, approval speed, approval rate and SLA breaches across departments.</p>
           </div>
         </div>
       </div>
 
       <div>
-        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">User Stories &amp; Acceptance Criteria</h3>
+        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">User Stories &amp; Acceptance Criteria</h3>
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <article class="card">
-            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-01</code> Submit a request</h4>
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100"><code class="text-emerald-700 dark:text-emerald-300">US-01</code> Submit a request</h4>
             <p class="muted mt-1">As a staff member, I want to submit a service request through one form so that it is tracked centrally instead of by email.</p>
             <dl class="gwt mt-2">
               <dt>Given</dt><dd>I am in Staff View on the Workflow tab</dd>
@@ -512,7 +693,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             </dl>
           </article>
           <article class="card">
-            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-02</code> Get clear validation feedback</h4>
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100"><code class="text-emerald-700 dark:text-emerald-300">US-02</code> Get clear validation feedback</h4>
             <p class="muted mt-1">As a staff member, I want to see what is wrong with my input so that I can correct it before submitting.</p>
             <dl class="gwt mt-2">
               <dt>Given</dt><dd>I enter an Employee ID that does not match <code>EMP-xxx</code> or a description under 15 characters</dd>
@@ -521,7 +702,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             </dl>
           </article>
           <article class="card">
-            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-03</code> Triage incoming requests</h4>
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100"><code class="text-emerald-700 dark:text-emerald-300">US-03</code> Triage incoming requests</h4>
             <p class="muted mt-1">As a manager, I want to move new requests into review so that requesters know they are being handled.</p>
             <dl class="gwt mt-2">
               <dt>Given</dt><dd>I am in Manager View and a request is <em>Submitted</em></dd>
@@ -530,7 +711,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             </dl>
           </article>
           <article class="card">
-            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-04</code> Approve or reject with a note</h4>
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100"><code class="text-emerald-700 dark:text-emerald-300">US-04</code> Approve or reject with a note</h4>
             <p class="muted mt-1">As a manager, I want to approve or reject with a reason so that decisions are documented.</p>
             <dl class="gwt mt-2">
               <dt>Given</dt><dd>a request is <em>Under Review</em> and I have opened its History modal</dd>
@@ -539,7 +720,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             </dl>
           </article>
           <article class="card">
-            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-05</code> Prevent invalid status changes</h4>
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100"><code class="text-emerald-700 dark:text-emerald-300">US-05</code> Prevent invalid status changes</h4>
             <p class="muted mt-1">As a process owner, I want the lifecycle enforced so that requests cannot skip review or be reopened.</p>
             <dl class="gwt mt-2">
               <dt>Given</dt><dd>a request is <em>Submitted</em>, <em>Rejected</em> or <em>Completed</em></dd>
@@ -548,7 +729,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             </dl>
           </article>
           <article class="card">
-            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-06</code> Filter executive KPIs</h4>
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100"><code class="text-emerald-700 dark:text-emerald-300">US-06</code> Filter executive KPIs</h4>
             <p class="muted mt-1">As a leader, I want to slice KPIs by department, status, priority and date so that I can spot bottlenecks.</p>
             <dl class="gwt mt-2">
               <dt>Given</dt><dd>I am in Leadership View on the Dashboard</dd>
@@ -557,7 +738,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             </dl>
           </article>
           <article class="card lg:col-span-2">
-            <h4 class="text-sm font-semibold text-slate-100"><code class="text-emerald-300">US-07</code> Audit trail and data export</h4>
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100"><code class="text-emerald-700 dark:text-emerald-300">US-07</code> Audit trail and data export</h4>
             <p class="muted mt-1">As an auditor or leader, I want to see each request's full history and export the dataset so that decisions can be reviewed offline.</p>
             <dl class="gwt mt-2">
               <dt>Given</dt><dd>any role is active</dd>
@@ -587,12 +768,12 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div class="card">
           <h3 class="card-title">Recorded Assumptions</h3>
-          <ul class="list-disc space-y-2 pl-5 text-sm text-slate-300">
-            <li><strong class="text-slate-100">Static browser storage:</strong> the prototype is a static GitHub Pages site; data persists per browser in <code>localStorage</code> with no backend. A production build would move to the relational schema below.</li>
-            <li><strong class="text-slate-100">Synthetic identities:</strong> all requesters use anonymized <code>EMP-xxx</code> IDs; no names, emails or real employee data are stored.</li>
-            <li><strong class="text-slate-100">7-day overdue SLA:</strong> a single global threshold (<code>PORTAL_CONFIG.slaThresholdDays</code>) applies to all priorities.</li>
-            <li><strong class="text-slate-100">Strict state machine:</strong> statuses change only through <code>VALID_TRANSITIONS</code>; there is no admin override.</li>
-            <li><strong class="text-slate-100">Fail-closed CI/CD:</strong> if secret scanning, linting or the dependency audit fails, the deploy job does not run.</li>
+          <ul class="list-disc space-y-2 pl-5 text-sm text-slate-600 dark:text-slate-300">
+            <li><strong class="text-slate-900 dark:text-slate-100">Static browser storage:</strong> the prototype is a static GitHub Pages site; data persists per browser in <code>localStorage</code> with no backend. A production build would move to the relational schema below.</li>
+            <li><strong class="text-slate-900 dark:text-slate-100">Synthetic identities:</strong> all requesters use anonymized <code>EMP-xxx</code> IDs; no names, emails or real employee data are stored.</li>
+            <li><strong class="text-slate-900 dark:text-slate-100">7-day overdue SLA:</strong> a single global threshold (<code>PORTAL_CONFIG.slaThresholdDays</code>) applies to all priorities.</li>
+            <li><strong class="text-slate-900 dark:text-slate-100">Strict state machine:</strong> statuses change only through <code>VALID_TRANSITIONS</code>; there is no admin override.</li>
+            <li><strong class="text-slate-900 dark:text-slate-100">Fail-closed CI/CD:</strong> if secret scanning, linting or the dependency audit fails, the deploy job does not run.</li>
             <li>Role switching is a demo convenience, not authentication; production would map roles from SSO.</li>
           </ul>
         </div>
@@ -600,10 +781,10 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
         <div class="card">
           <h3 class="card-title">Entity-Relationship Schema</h3>
           <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-            <div class="flex-1 rounded-lg border border-emerald-800 bg-slate-950">
-              <div class="rounded-t-lg border-b border-emerald-800 bg-emerald-500/10 px-3 py-2 mono text-sm font-semibold text-emerald-300">REQUESTS</div>
-              <ul class="mono space-y-0.5 px-3 py-2 text-xs text-slate-300">
-                <li><span class="text-amber-300">PK</span> id</li>
+            <div class="flex-1 rounded-lg border border-emerald-300 dark:border-emerald-800 inset-surface">
+              <div class="rounded-t-lg border-b border-emerald-300 dark:border-emerald-800 bg-emerald-500/10 px-3 py-2 mono text-sm font-semibold text-emerald-700 dark:text-emerald-300">REQUESTS</div>
+              <ul class="mono space-y-0.5 px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                <li><span class="text-amber-700 dark:text-amber-300">PK</span> id</li>
                 <li>title</li>
                 <li>requester_id</li>
                 <li>department</li>
@@ -615,12 +796,12 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
                 <li>description</li>
               </ul>
             </div>
-            <div class="mono text-center text-sm font-semibold text-slate-400" aria-label="one to many">(1) ─── (N)</div>
-            <div class="flex-1 rounded-lg border border-blue-800 bg-slate-950">
-              <div class="rounded-t-lg border-b border-blue-800 bg-blue-500/10 px-3 py-2 mono text-sm font-semibold text-blue-300">STATUS_HISTORY</div>
-              <ul class="mono space-y-0.5 px-3 py-2 text-xs text-slate-300">
-                <li><span class="text-amber-300">PK</span> history_id</li>
-                <li><span class="text-sky-300">FK</span> request_id → requests.id</li>
+            <div class="mono text-center text-sm font-semibold text-slate-500 dark:text-slate-400" aria-label="one to many">(1) ─── (N)</div>
+            <div class="flex-1 rounded-lg border border-blue-300 dark:border-blue-800 inset-surface">
+              <div class="rounded-t-lg border-b border-blue-300 dark:border-blue-800 bg-blue-500/10 px-3 py-2 mono text-sm font-semibold text-blue-700 dark:text-blue-300">STATUS_HISTORY</div>
+              <ul class="mono space-y-0.5 px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                <li><span class="text-amber-700 dark:text-amber-300">PK</span> history_id</li>
+                <li><span class="text-sky-700 dark:text-sky-300">FK</span> request_id → requests.id</li>
                 <li>status</li>
                 <li>timestamp</li>
                 <li>actor</li>
@@ -637,18 +818,18 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
     <section id="section-security" role="tabpanel" aria-label="Security and Pipeline" class="space-y-6" hidden>
       <div>
         <h2 class="section-heading">Security &amp; Pipeline</h2>
-        <p class="section-sub">Every push to <code class="text-emerald-300">main</code> must pass three security gates before it deploys to GitHub Pages.</p>
+        <p class="section-sub">Every push to <code class="text-emerald-700 dark:text-emerald-300">main</code> must pass three security gates before it deploys to GitHub Pages.</p>
       </div>
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <a data-link="repo" href="https://github.com/KVKMadithya/eguardian-service-portal" class="card link-card">
           <p class="kpi-label">Source Repository</p>
-          <p class="mt-2 font-semibold text-slate-100">KVKMadithya/eguardian-service-portal ↗</p>
+          <p class="mt-2 font-semibold text-slate-900 dark:text-slate-100">KVKMadithya/eguardian-service-portal ↗</p>
           <p class="muted mt-1 break-all">https://github.com/KVKMadithya/eguardian-service-portal</p>
         </a>
         <a data-link="actions" href="https://github.com/KVKMadithya/eguardian-service-portal/actions" class="card link-card">
           <p class="kpi-label">Live CI/CD Pipeline</p>
-          <p class="mt-2 font-semibold text-slate-100">GitHub Actions — DevSecOps Pipeline ↗</p>
+          <p class="mt-2 font-semibold text-slate-900 dark:text-slate-100">GitHub Actions — DevSecOps Pipeline ↗</p>
           <p class="muted mt-1 break-all">https://github.com/KVKMadithya/eguardian-service-portal/actions</p>
         </a>
       </div>
@@ -659,7 +840,7 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             <p class="kpi-label">Gate 1 · Secret Detection</p>
             <span class="badge badge-pass">PASSED</span>
           </div>
-          <p class="mono mt-3 text-sm text-emerald-300">gitleaks/gitleaks-action@v2</p>
+          <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">gitleaks/gitleaks-action@v2</p>
           <p class="muted mt-2">Scans the full git history (<code>fetch-depth: 0</code>) for API keys, tokens and credentials. Last run: no leaks found.</p>
         </div>
         <div class="card">
@@ -667,22 +848,22 @@ WHERE status IN ('Submitted', 'Under Review', 'Approved')
             <p class="kpi-label">Gate 2 · SAST &amp; Security Linting</p>
             <span class="badge badge-pass">PASSED</span>
           </div>
-          <p class="mono mt-3 text-sm text-emerald-300">eslint + eslint-plugin-security</p>
-          <p class="muted mt-2"><code>npm run lint</code> applies <code>eslint:recommended</code> and <code>plugin:security/recommended-legacy</code> to <code>app.js</code>. Last run: 0 errors, 0 warnings.</p>
+          <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">eslint + eslint-plugin-security</p>
+          <p class="muted mt-2"><code>npm run lint</code> applies <code>eslint:recommended</code> and <code>plugin:security/recommended-legacy</code> to <code>app.js</code> and <code>theme-init.js</code>. Last run: 0 errors, 0 warnings.</p>
         </div>
         <div class="card">
           <div class="flex items-center justify-between">
             <p class="kpi-label">Gate 3 · Dependency Scanning</p>
             <span class="badge badge-pass">PASSED</span>
           </div>
-          <p class="mono mt-3 text-sm text-emerald-300">npm audit --audit-level=critical</p>
+          <p class="mono mt-3 text-sm text-emerald-700 dark:text-emerald-300">npm audit --audit-level=critical</p>
           <p class="muted mt-2">Fails the build on any critical CVE in the dependency tree. Last run: found 0 vulnerabilities.</p>
         </div>
       </div>
 
       <div class="card">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 class="card-title mb-0">Pipeline Definition — <code class="text-emerald-300">.github/workflows/deploy.yml</code></h3>
+          <h3 class="card-title mb-0">Pipeline Definition — <code class="text-emerald-700 dark:text-emerald-300">.github/workflows/deploy.yml</code></h3>
           <span class="muted">deploy runs only if <code>security-and-quality</code> succeeds (<code>needs:</code>)</span>
         </div>
 <pre class="code-block max-h-[32rem]"><code>name: DevSecOps Pipeline
@@ -784,12 +965,12 @@ jobs:
       <div class="card">
         <h3 class="card-title">AI Tools Declaration</h3>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div class="rounded-lg border border-slate-800 bg-slate-950 p-4">
-            <p class="font-semibold text-slate-100">Claude Code / Claude Desktop Pro</p>
+          <div class="rounded-lg border border-slate-200 dark:border-slate-800 inset-surface p-4">
+            <p class="font-semibold text-slate-900 dark:text-slate-100">Claude Code / Claude Desktop Pro</p>
             <p class="muted mt-1">UI scaffolding (this page and <code>app.js</code>) and generation of the 36-record synthetic dataset.</p>
           </div>
-          <div class="rounded-lg border border-slate-800 bg-slate-950 p-4">
-            <p class="font-semibold text-slate-100">Google Gemini</p>
+          <div class="rounded-lg border border-slate-200 dark:border-slate-800 inset-surface p-4">
+            <p class="font-semibold text-slate-900 dark:text-slate-100">Google Gemini</p>
             <p class="muted mt-1">DevSecOps pipeline configuration, ESLint v8 plugin compatibility research, and requirements analysis.</p>
           </div>
         </div>
@@ -800,7 +981,7 @@ jobs:
         <article class="card">
           <div class="flex flex-wrap items-center gap-2">
             <span class="badge badge-rejected">Security</span>
-            <h3 class="text-sm font-semibold text-slate-100">Issue 1 — DOM XSS via raw <code>innerHTML</code></h3>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 1 — DOM XSS via raw <code>innerHTML</code></h3>
           </div>
           <p class="muted mt-2">Generated table-rendering code interpolated user-supplied titles straight into <code>innerHTML</code>. A title such as <code>&lt;img src=x onerror=alert(1)&gt;</code> would execute in every viewer's browser. Fixed with an <code>escapeHTML()</code> sanitizer on every dynamic value, backed by a CSP header.</p>
           <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -821,7 +1002,7 @@ row.innerHTML = `&lt;td&gt;${escapeHTML(req.title)}&lt;/td&gt;
         <article class="card">
           <div class="flex flex-wrap items-center gap-2">
             <span class="badge badge-under-review">Logic</span>
-            <h3 class="text-sm font-semibold text-slate-100">Issue 2 — Unrestricted status dropdown</h3>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 2 — Unrestricted status dropdown</h3>
           </div>
           <p class="muted mt-2">The first draft offered a free <code>&lt;select&gt;</code> of all five statuses, so a request could jump from Submitted straight to Completed or be reopened after rejection. Replaced with a deterministic <code>VALID_TRANSITIONS</code> state machine and per-transition buttons.</p>
           <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -847,7 +1028,7 @@ if (!canTransition(request.status, toStatus)) {
         <article class="card">
           <div class="flex flex-wrap items-center gap-2">
             <span class="badge badge-approved">Quality / DevSecOps</span>
-            <h3 class="text-sm font-semibold text-slate-100">Issue 3 — ESLint v8 circular config error</h3>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 3 — ESLint v8 circular config error</h3>
           </div>
           <p class="muted mt-2"><code>eslint-plugin-security</code> v2 exports a flat-config object as <code>recommended</code>. Under ESLint v8's legacy <code>.eslintrc</code> format this crashed the lint gate with <code>TypeError: Converting circular structure to JSON</code>. Switched to the legacy preset.</p>
           <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -867,7 +1048,7 @@ if (!canTransition(request.status, toStatus)) {
         <article class="card">
           <div class="flex flex-wrap items-center gap-2">
             <span class="badge badge-under-review">Logic / Quality</span>
-            <h3 class="text-sm font-semibold text-slate-100">Issue 4 — <code>NaN%</code> on empty filters &amp; Chart.js canvas leaks</h3>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Issue 4 — <code>NaN%</code> on empty filters &amp; Chart.js canvas leaks</h3>
           </div>
           <p class="muted mt-2">Filtering to a set with no decided requests divided by zero and rendered <code>NaN%</code>. Each re-render also created a new Chart on the same canvas without destroying the old one, causing flicker, stale tooltips and growing memory use. Added zero-guards and <code>.destroy()</code> before each re-create.</p>
           <div class="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -889,9 +1070,9 @@ function createChart(key, config) {
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div class="card">
           <h3 class="card-title">End-User Guide</h3>
-          <div class="space-y-4 text-sm text-slate-300">
+          <div class="space-y-4 text-sm text-slate-600 dark:text-slate-300">
             <div>
-              <p class="font-semibold text-slate-100">Staff — submit a request</p>
+              <p class="font-semibold text-slate-900 dark:text-slate-100">Staff — submit a request</p>
               <ol class="mt-1 list-decimal space-y-1 pl-5">
                 <li>Choose <em>Staff View</em> in the Role selector.</li>
                 <li>Open <em>Workflow</em> and complete <em>Submit New Request</em>, using your <code>EMP-xxx</code> ID.</li>
@@ -900,7 +1081,7 @@ function createChart(key, config) {
               </ol>
             </div>
             <div>
-              <p class="font-semibold text-slate-100">Managers — review and approve</p>
+              <p class="font-semibold text-slate-900 dark:text-slate-100">Managers — review and approve</p>
               <ol class="mt-1 list-decimal space-y-1 pl-5">
                 <li>Choose <em>Manager View</em>; transition buttons appear in the queue.</li>
                 <li>Use the status pills or search to find requests, then click <em>Move to Review</em>.</li>
@@ -909,7 +1090,7 @@ function createChart(key, config) {
               </ol>
             </div>
             <div>
-              <p class="font-semibold text-slate-100">Leadership — filter KPIs</p>
+              <p class="font-semibold text-slate-900 dark:text-slate-100">Leadership — filter KPIs</p>
               <ol class="mt-1 list-decimal space-y-1 pl-5">
                 <li>Choose <em>Leadership View</em> (read-only) and open <em>Dashboard</em>.</li>
                 <li>Filter by department, status, priority or date range; all KPIs and charts update instantly.</li>
@@ -921,49 +1102,50 @@ function createChart(key, config) {
 
         <div class="card">
           <h3 class="card-title">Developer Handover Guide</h3>
-          <div class="space-y-3 text-sm text-slate-300">
-            <p class="font-semibold text-slate-100">1. Clone and install</p>
+          <div class="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+            <p class="font-semibold text-slate-900 dark:text-slate-100">1. Clone and install</p>
 <pre class="code-block">git clone https://github.com/KVKMadithya/eguardian-service-portal.git
 cd eguardian-service-portal
 npm install</pre>
-            <p class="font-semibold text-slate-100">2. Run locally</p>
+            <p class="font-semibold text-slate-900 dark:text-slate-100">2. Run locally</p>
 <pre class="code-block">python3 -m http.server 8080
 # open http://localhost:8080</pre>
             <p class="muted">Serve over HTTP rather than opening the file directly so the CSP <code>'self'</code> source resolves correctly.</p>
-            <p class="font-semibold text-slate-100">3. Modify the dataset or KPIs</p>
+            <p class="font-semibold text-slate-900 dark:text-slate-100">3. Modify the dataset or KPIs</p>
             <ul class="list-disc space-y-1 pl-5">
               <li>Edit records in <code>INITIAL_REQUESTS</code> in <code>app.js</code>, then click <em>Reset Demo Data</em> (or bump <code>STORAGE_KEY</code>) to reload them.</li>
               <li>KPI logic lives in <code>computeKPIs()</code>; charts in <code>renderCharts()</code>; the SLA in <code>PORTAL_CONFIG.slaThresholdDays</code>.</li>
               <li>Lifecycle rules live in <code>VALID_TRANSITIONS</code>; role rights in <code>ROLE_PERMISSIONS</code>.</li>
+              <li>Light/dark colours are CSS variables (<code>:root</code> and <code>.dark</code>) in the <code>&lt;style&gt;</code> block; <code>theme-init.js</code> applies the saved theme before first paint, and <code>applyChartTheme()</code> re-reads them for Chart.js.</li>
             </ul>
-            <p class="font-semibold text-slate-100">4. Run the security gates locally</p>
+            <p class="font-semibold text-slate-900 dark:text-slate-100">4. Run the security gates locally</p>
 <pre class="code-block">npm run lint
 npm run security:audit</pre>
-            <p class="font-semibold text-slate-100">5. Redeploy</p>
+            <p class="font-semibold text-slate-900 dark:text-slate-100">5. Redeploy</p>
 <pre class="code-block">git add .
 git commit -m "Describe your change"
 git push origin main</pre>
-            <p class="muted">The push triggers the DevSecOps Pipeline; if all three gates pass, the site redeploys to <a data-link="live" href="https://kvkmadithya.github.io/eguardian-service-portal/" class="text-emerald-400 underline">kvkmadithya.github.io/eguardian-service-portal</a>.</p>
+            <p class="muted">The push triggers the DevSecOps Pipeline; if all three gates pass, the site redeploys to <a data-link="live" href="https://kvkmadithya.github.io/eguardian-service-portal/" class="text-emerald-600 dark:text-emerald-400 underline">kvkmadithya.github.io/eguardian-service-portal</a>.</p>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+  <footer class="border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500">
     eGuardian Service Request Portal · synthetic demo data only ·
-    <a data-link="repo" href="https://github.com/KVKMadithya/eguardian-service-portal" class="text-slate-400 underline">source</a>
+    <a data-link="repo" href="https://github.com/KVKMadithya/eguardian-service-portal" class="text-slate-500 dark:text-slate-400 underline">source</a>
   </footer>
 
   <!-- ===================== STATUS HISTORY MODAL ===================== -->
   <div id="historyModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true" hidden>
     <div class="modal-panel">
       <div class="flex items-start justify-between gap-4">
-        <h2 id="modalTitle" class="text-base font-semibold text-slate-100">Request History</h2>
+        <h2 id="modalTitle" class="text-base font-semibold text-slate-900 dark:text-slate-100">Request History</h2>
         <button type="button" class="btn btn-sm btn-ghost" data-action="close-modal" aria-label="Close dialog">✕</button>
       </div>
-      <div id="modalMeta" class="mt-2 space-y-2 text-sm text-slate-300"></div>
-      <h3 class="mt-5 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status History</h3>
+      <div id="modalMeta" class="mt-2 space-y-2 text-sm text-slate-600 dark:text-slate-300"></div>
+      <h3 class="mt-5 mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status History</h3>
       <ol id="modalHistory" class="timeline"></ol>
       <div id="managerNoteWrap" class="mt-4" data-requires-transition>
         <label for="managerNote" class="field-label">Manager Note (optional)</label>

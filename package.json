@@ -4,7 +4,7 @@
   "private": true,
   "description": "Enterprise Service Request Portal with DevSecOps CI/CD Pipeline",
   "scripts": {
-    "lint": "eslint app.js",
+    "lint": "eslint app.js theme-init.js",
     "security:audit": "npm audit --audit-level=critical"
   },
   "devDependencies": {

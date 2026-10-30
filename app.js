@@ -14,6 +14,8 @@ const PORTAL_CONFIG = Object.freeze({
 
 const TODAY = "2026-10-30";
 const STORAGE_KEY = "eguardian_requests_v1";
+const THEME_STORAGE_KEY = "eguardian_theme_v1"; // also read by theme-init.js before first paint
+const THEMES = Object.freeze(["light", "dark"]);
 
 const DEPARTMENTS = Object.freeze(["IT", "Facilities", "HR", "Finance", "Operations", "Security"]);
 const REQUEST_TYPES = Object.freeze([
@@ -831,7 +833,71 @@ function showToast(message, variant = "info") {
   toast.setAttribute("role", "status");
   toast.textContent = message;
   container.appendChild(toast);
-  window.setTimeout(() => toast.remove(), 3500);
+  window.setTimeout(() => {
+    toast.classList.add("toast-leave");
+    window.setTimeout(() => toast.remove(), 250);
+  }, 3500);
+}
+
+/* --------------------------------------------------------------------------
+   Theme engine (light / dark)
+   -------------------------------------------------------------------------- */
+
+function cssVar(name, fallback) {
+  const value = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value || fallback;
+}
+
+function storedTheme() {
+  try {
+    const value = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return THEMES.includes(value) ? value : null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function currentTheme() {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+function applyChartTheme() {
+  if (typeof Chart === "undefined") return;
+  Chart.defaults.color = cssVar("--chart-text", "#64748b");
+  Chart.defaults.borderColor = cssVar("--chart-grid", "rgba(148, 163, 184, 0.15)");
+  Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+  Chart.defaults.plugins.tooltip.backgroundColor = cssVar("--tooltip-bg", "#0f172a");
+  Chart.defaults.plugins.tooltip.titleColor = cssVar("--tooltip-text", "#f8fafc");
+  Chart.defaults.plugins.tooltip.bodyColor = cssVar("--tooltip-text", "#f8fafc");
+  Chart.defaults.plugins.tooltip.padding = 10;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+}
+
+function syncThemeToggle() {
+  const toggle = byId("themeToggle");
+  if (!toggle) return;
+  const dark = currentTheme() === "dark";
+  toggle.setAttribute("aria-pressed", dark ? "true" : "false");
+  toggle.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+}
+
+function applyTheme(theme, persist) {
+  if (!THEMES.includes(theme)) return;
+  document.documentElement.classList.toggle("dark", theme === "dark");
+  if (persist) {
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch (_err) {
+      // Preference simply won't survive a reload; the theme still applies.
+    }
+  }
+  syncThemeToggle();
+  applyChartTheme();
+  if (state.activeTab === "dashboard") renderDashboard();
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
 }
 
 /* --------------------------------------------------------------------------
@@ -1109,7 +1175,16 @@ function renderCharts(requests) {
     type: "bar",
     data: {
       labels: DEPARTMENTS.slice(),
-      datasets: [{ label: "Requests", data: deptCounts, backgroundColor: "#3b82f6", borderRadius: 4 }],
+      datasets: [
+        {
+          label: "Requests",
+          data: deptCounts,
+          backgroundColor: "rgba(99, 102, 241, 0.75)",
+          hoverBackgroundColor: "#6366f1",
+          borderRadius: 6,
+          maxBarThickness: 44,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -1133,10 +1208,14 @@ function renderCharts(requests) {
         {
           label: "Requests created",
           data: weeks.map((w) => weekly.get(w)),
-          borderColor: "#6366f1",
-          backgroundColor: "rgba(99, 102, 241, 0.15)",
+          borderColor: "#10b981",
+          backgroundColor: "rgba(16, 185, 129, 0.14)",
+          pointBackgroundColor: "#10b981",
+          pointBorderColor: cssVar("--chart-surface", "#ffffff"),
+          pointRadius: 3,
+          pointHoverRadius: 5,
           fill: true,
-          tension: 0.3,
+          tension: 0.35,
         },
       ],
     },
@@ -1156,13 +1235,17 @@ function renderCharts(requests) {
         {
           data: STATUSES.map((s) => requests.filter((r) => r.status === s).length),
           backgroundColor: STATUSES.map((s) => STATUS_COLORS[s]),
+          borderColor: cssVar("--chart-surface", "#ffffff"),
+          borderWidth: 2,
+          hoverOffset: 6,
         },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: "bottom" } },
+      cutout: "66%",
+      plugins: { legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, padding: 14 } } },
     },
   });
 }
@@ -1468,7 +1551,19 @@ function switchTab(tab) {
     const panel = byId(`section-${name}`);
     if (panel) panel.hidden = name !== tab;
   });
+  if (window.location.hash !== `#${tab}`) {
+    try {
+      window.history.replaceState(null, "", `#${tab}`);
+    } catch (_err) {
+      // Some file:// contexts disallow history updates; tab switching still works.
+    }
+  }
   if (tab === "dashboard") renderDashboard();
+}
+
+function tabFromHash() {
+  const hash = window.location.hash.replace("#", "");
+  return TABS.includes(hash) ? hash : null;
 }
 
 /* --------------------------------------------------------------------------
@@ -1517,6 +1612,9 @@ function handleClick(event) {
     case "close-modal":
       closeModal();
       break;
+    case "toggle-theme":
+      toggleTheme();
+      break;
     case "transition": {
       const note = byId("managerNote");
       const useNote = note && state.selectedRequestId === id;
@@ -1563,10 +1661,12 @@ function init() {
   populateSelect("type", REQUEST_TYPES, "Select request type");
   populateSelect("priority", PRIORITIES, "Select priority");
 
-  if (typeof Chart !== "undefined") {
-    Chart.defaults.color = "#94a3b8";
-    Chart.defaults.borderColor = "rgba(148, 163, 184, 0.15)";
-    Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+  applyChartTheme();
+  syncThemeToggle();
+  if (typeof window.matchMedia === "function") {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
+      if (!storedTheme()) applyTheme(event.matches ? "dark" : "light", false);
+    });
   }
 
   applyConfigLinks();
@@ -1602,9 +1702,20 @@ function init() {
     });
   }
 
+  window.addEventListener("hashchange", () => {
+    const tab = tabFromHash();
+    if (tab && tab !== state.activeTab) switchTab(tab);
+  });
+
   applyRoleUI();
+  state.activeTab = tabFromHash() || state.activeTab;
   renderAll();
   switchTab(state.activeTab);
+
+  // Enable theme cross-fade transitions only after the first paint, so the initial load never animates.
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => document.documentElement.classList.add("theme-ready"));
+  });
 }
 
 if (document.readyState === "loading") {
